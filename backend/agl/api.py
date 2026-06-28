@@ -16,6 +16,7 @@ from agl.grounding import build_evidence, render_prompt
 from agl.guard import run_guard
 from agl.learning import apply_correction, pending_reruns
 from agl.models import (
+    Account,
     AgentProtocol,
     Confidence,
     Decision,
@@ -55,6 +56,20 @@ class CorrectRequest(BaseModel):
 class CorrectResponse(BaseModel):
     correction_id: str
     reran: list[str]
+
+
+class CreateAccountRequest(BaseModel):
+    number: str
+    name_en: str
+    name_nl: str
+    rubriek: Rubriek
+
+
+class AssignAccountRequest(BaseModel):
+    number: str
+    name_en: str | None = None
+    name_nl: str | None = None
+    rubriek: Rubriek | None = None
 
 
 class ExplainResponse(BaseModel):
@@ -245,6 +260,61 @@ class Console:
                 self._posted.discard(affected)
             return CorrectResponse(correction_id=correction.id, reran=reran)
 
+    async def create_account(self, body: CreateAccountRequest) -> Account:
+        async with self._lock:
+            account = self._account(body.number, body.name_en, body.name_nl, body.rubriek)
+            try:
+                self._repo = self._repo.add_account(account)
+            except ValueError as e:
+                raise HTTPException(status_code=422, detail=str(e)) from e
+            return account
+
+    async def assign_account(self, txn_id: str, body: AssignAccountRequest) -> list[Decision]:
+        async with self._lock:
+            decision = self.decision(txn_id)
+            if body.number not in {a.number for a in self._repo.accounts(self._customer)}:
+                try:
+                    self._repo = self._repo.add_account(self._new_account(body))
+                except ValueError as e:
+                    raise HTTPException(status_code=422, detail=str(e)) from e
+            try:
+                correction = apply_correction(
+                    self._repo, txn_id, body.number, None, vendor=decision.vendor
+                )
+            except ValueError as e:
+                raise HTTPException(status_code=422, detail=str(e)) from e
+            self._repo = self._repo.reload()
+            reran = pending_reruns(correction, list(self._decisions.values()))
+            updated: list[Decision] = []
+            for affected in [txn_id, *reran]:
+                txn = self._find(affected)
+                if txn is None:
+                    continue
+                settled_by = self._resolved_claims(exclude=affected)
+                evidence, proposal = await decide(txn, self._repo, self._agent)
+                self._decisions[affected] = finalize(txn, self._repo, evidence, proposal, settled_by)
+                self._posted.discard(affected)
+                updated.append(self._decisions[affected])
+            return updated
+
+    def _account(self, number: str, name_en: str, name_nl: str, rubriek: Rubriek) -> Account:
+        return Account(
+            number=number,
+            customer_id=self._customer,
+            name_nl=name_nl,
+            name_en=name_en,
+            rubriek=rubriek,
+            rgs_group="",
+        )
+
+    def _new_account(self, body: AssignAccountRequest) -> Account:
+        if body.name_en is None or body.name_nl is None or body.rubriek is None:
+            raise HTTPException(
+                status_code=422,
+                detail=f"account {body.number!r} is not in the chart; provide name_en, name_nl, and rubriek to create it",
+            )
+        return self._account(body.number, body.name_en, body.name_nl, body.rubriek)
+
     def explain(self, txn_id: str) -> ExplainResponse:
         decision = self.decision(txn_id)
         return ExplainResponse(transaction_id=txn_id, explanation=_narrate(decision))
@@ -348,6 +418,18 @@ async def handle_transaction(transaction_id: str) -> HandledRecord:
 async def correct_transaction(transaction_id: str, body: CorrectRequest) -> CorrectResponse:
     """Apply the accountant's correction and re-run the pending similar transactions."""
     return await _console.correct(transaction_id, body.corrected_account, body.corrected_match)
+
+
+@app.post("/account")
+async def create_account(body: CreateAccountRequest) -> Account:
+    """Create a new chart-of-accounts entry for the customer and return it; the chart grows at runtime."""
+    return await _console.create_account(body)
+
+
+@app.post("/transaction/{transaction_id}/assign-account")
+async def assign_account(transaction_id: str, body: AssignAccountRequest) -> list[Decision]:
+    """Create the account if new, assign the transaction to it so the cohort learns it, and re-run the affected and sibling decisions."""
+    return await _console.assign_account(transaction_id, body)
 
 
 @app.post("/transaction/{transaction_id}/explain")

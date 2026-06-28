@@ -335,12 +335,21 @@ function renderActions(txnId, d) {
   const correctBtn = el("button", "btn btn-correct", "Correct");
   const explainBtn = el("button", "btn", "Explain");
   actions.append(correctBtn, explainBtn);
+  const assignBtn = d.outcome === "review" ? el("button", "btn", "New account") : null;
+  if (assignBtn) actions.append(assignBtn);
   wrap.append(actions);
 
   const correctPanel = renderCorrectPanel(txnId, d);
   correctPanel.hidden = true;
   wrap.append(correctPanel);
   correctBtn.addEventListener("click", () => { correctPanel.hidden = !correctPanel.hidden; });
+
+  if (assignBtn) {
+    const assignPanel = renderAssignPanel(txnId);
+    assignPanel.hidden = true;
+    wrap.append(assignPanel);
+    assignBtn.addEventListener("click", () => { assignPanel.hidden = !assignPanel.hidden; });
+  }
 
   const explainOut = el("div", "explain-out");
   explainOut.hidden = true;
@@ -414,6 +423,72 @@ function renderCorrectPanel(txnId, d) {
   });
   panel.append(submit);
   return panel;
+}
+
+function renderAssignPanel(txnId) {
+  const panel = el("div", "correct-panel");
+  panel.append(el("h3", null, "Create account & assign — grows the chart and teaches the cohort"));
+
+  const numField = el("div", "field");
+  numField.append(el("label", null, "New account number"));
+  const numInput = el("input");
+  numInput.placeholder = "e.g. 4310";
+  numField.append(numInput);
+  panel.append(numField);
+
+  const nameField = el("div", "field");
+  nameField.append(el("label", null, "Account name"));
+  const nameInput = el("input");
+  nameInput.placeholder = "e.g. Design tools";
+  nameField.append(nameInput);
+  panel.append(nameField);
+
+  const rubField = el("div", "field");
+  rubField.append(el("label", null, "Rubriek"));
+  const rubSelect = el("select");
+  for (const code of Object.keys(RUBRIEK_LABEL)) {
+    const opt = el("option", null, `${code} · ${RUBRIEK_LABEL[code]}`);
+    opt.value = code;
+    rubSelect.append(opt);
+  }
+  rubField.append(rubSelect);
+  panel.append(rubField);
+
+  const submit = el("button", "btn btn-correct", "Create & assign");
+  submit.addEventListener("click", () => onAssignAccount(txnId, numInput, nameInput, rubSelect, submit));
+  panel.append(submit);
+  return panel;
+}
+
+async function onAssignAccount(txnId, numInput, nameInput, rubSelect, submit) {
+  const number = numInput.value.trim();
+  const name = nameInput.value.trim();
+  if (!number || !name) {
+    toast("Enter an account number and a name.", true);
+    return;
+  }
+  const rubriek = rubSelect.value;
+  submit.disabled = true;
+  try {
+    const updated = await api(`/transaction/${txnId}/assign-account`, "POST", {
+      number,
+      name_en: name,
+      name_nl: name,
+      rubriek,
+    });
+    if (!state.accountByNumber[number]) {
+      const account = { number, name_en: name, name_nl: name, rubriek };
+      state.accountByNumber[number] = account;
+      state.accounts.push(account);
+    }
+    toast(`Account ${number} created and assigned. ${updated.length} decision(s) re-run.`);
+    await refresh();
+    closeCard();
+  } catch (e) {
+    toast(String(e.message || e), true);
+  } finally {
+    submit.disabled = false;
+  }
 }
 
 async function onAccept(txnId) {

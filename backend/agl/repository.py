@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-from typing import TypeVar
+from typing import Generic, TypeVar
 
 from pydantic import BaseModel
 
@@ -30,28 +30,30 @@ def _runtime_dir(override: Path | None) -> Path:
     return Path(env) if env else RUNTIME
 
 
-class CorrectionsStore:
-    """Writable store for corrections learned at runtime, kept strictly separate from the read-only seed fixtures.
+class RuntimeStore(Generic[T]):
+    """Append-only JSON store for records the accountant teaches at runtime, kept strictly separate from the read-only seed fixtures.
 
-    The committed ``seeds/corrections.json`` holds the five prior accountant corrections and is never
-    mutated; everything an accountant teaches the system at runtime is appended here instead.
+    The committed ``seeds/*.json`` fixtures are never mutated; everything learned at runtime — the
+    corrections, and the accounts the accountant adds to grow the chart — is appended to its own file
+    under ``runtime_dir`` instead.
     """
 
-    def __init__(self, path: Path) -> None:
+    def __init__(self, path: Path, model: type[T]) -> None:
         self._path = path
+        self._model = model
 
-    def load(self) -> list[Correction]:
+    def load(self) -> list[T]:
         if not self._path.exists():
             return []
         records: list[object] = json.loads(self._path.read_text())
-        return [Correction.model_validate(record) for record in records]
+        return [self._model.model_validate(record) for record in records]
 
-    def append(self, correction: Correction) -> None:
-        self.save([*self.load(), correction])
+    def append(self, record: T) -> None:
+        self.save([*self.load(), record])
 
-    def save(self, corrections: list[Correction]) -> None:
+    def save(self, records: list[T]) -> None:
         self._path.parent.mkdir(parents=True, exist_ok=True)
-        payload = [correction.model_dump(mode="json") for correction in corrections]
+        payload = [record.model_dump(mode="json") for record in records]
         self._path.write_text(json.dumps(payload, indent=2))
 
 
@@ -67,8 +69,14 @@ class Repository:
         self._seed_corrections = self._load(seeds_dir / "corrections.json", Correction)
         self._truth = self._load(seeds_dir / "ground_truth.json", GroundTruth)
 
-        self.store = CorrectionsStore(self._runtime_dir / "corrections.json")
+        self.store: RuntimeStore[Correction] = RuntimeStore(
+            self._runtime_dir / "corrections.json", Correction
+        )
         self._runtime_corrections = self.store.load()
+        self.accounts_store: RuntimeStore[Account] = RuntimeStore(
+            self._runtime_dir / "accounts.json", Account
+        )
+        self._runtime_accounts = self.accounts_store.load()
 
         self._invoice_by_id = {i.id: i for i in self._invoices}
         self._bill_by_id = {b.id: b for b in self._bills}
@@ -85,7 +93,18 @@ class Repository:
         return Repository(self._seeds_dir, self._runtime_dir)
 
     def accounts(self, customer_id: str) -> list[Account]:
-        return [a for a in self._accounts if a.customer_id == customer_id]
+        chart = [*self._accounts, *self._runtime_accounts]
+        return [a for a in chart if a.customer_id == customer_id]
+
+    def add_account(self, account: Account) -> Repository:
+        """Append a new account to the runtime chart and return a reloaded Repository; the seed chart is never mutated.
+
+        Rejects a number already present in the customer's chart, so the chart only ever grows with genuinely new accounts.
+        """
+        if account.number in {a.number for a in self.accounts(account.customer_id)}:
+            raise ValueError(f"account {account.number!r} already in the chart")
+        self.accounts_store.append(account)
+        return self.reload()
 
     def transactions(self, customer_id: str) -> list[Transaction]:
         return [t for t in self._transactions if t.customer_id == customer_id]

@@ -193,9 +193,12 @@ class Console:
     ) -> CorrectResponse:
         async with self._lock:
             decision = self.decision(txn_id)
-            correction = apply_correction(
-                self._repo, txn_id, corrected_account, corrected_match, vendor=decision.vendor
-            )
+            try:
+                correction = apply_correction(
+                    self._repo, txn_id, corrected_account, corrected_match, vendor=decision.vendor
+                )
+            except ValueError as e:
+                raise HTTPException(status_code=422, detail=str(e)) from e
             self._repo = self._repo.reload()
             reran = pending_reruns(correction, list(self._decisions.values()))
             for affected in [txn_id, *reran]:

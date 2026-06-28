@@ -88,10 +88,21 @@ def apply_correction(
     ``vendor`` is ``Decision.vendor`` (the agent's canonical vendor); the loop generalizes on it, so the
     caller passes it. It falls back to the transaction's canonical vendor, never the raw counterparty.
     Identical conventions already on record are returned unchanged rather than duplicated.
+
+    Fails closed: a ``corrected_account`` must be a real account number and every ``corrected_match``
+    document must resolve, else ``ValueError`` is raised and nothing is persisted.
     """
     txn = repo.transaction(txn_id)
     if txn is None:
         raise KeyError(f"transaction {txn_id} not found")
+    if corrected_account is not None and corrected_account not in {
+        account.number for account in repo.accounts(txn.customer_id)
+    }:
+        raise ValueError(f"unknown account {corrected_account!r}")
+    if corrected_match is not None:
+        for doc_id in corrected_match:
+            if repo.document(doc_id) is None:
+                raise ValueError(f"unknown document {doc_id!r}")
     vendor_key = vendor if vendor and vendor.strip() else canonical_vendor(txn)
     match_rule = "+".join(corrected_match) if corrected_match else None
 

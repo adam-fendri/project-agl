@@ -5,6 +5,8 @@ from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
 
+import pytest
+
 from agl.grounding import build_evidence
 from agl.learning import apply_correction, canonical_vendor, pending_reruns, vendor_cost_account
 from agl.models import (
@@ -122,6 +124,36 @@ def test_apply_correction_dedupes(tmp_path: Path) -> None:
 
     assert first.id == second.id
     assert len(json.loads((tmp_path / "corrections.json").read_text())) == 1
+
+
+def test_apply_correction_rejects_unknown_account(tmp_path: Path) -> None:
+    repo = _runtime_repo(tmp_path)
+
+    with pytest.raises(ValueError, match="unknown account"):
+        apply_correction(repo, "T004", "9999", None, vendor="Figma")
+
+    assert not (tmp_path / "corrections.json").exists()
+    assert repo.store.load() == []
+
+
+def test_apply_correction_rejects_unknown_document(tmp_path: Path) -> None:
+    repo = _runtime_repo(tmp_path)
+
+    with pytest.raises(ValueError, match="unknown document"):
+        apply_correction(repo, "T004", None, ["INV-9999"], vendor="Figma")
+
+    assert not (tmp_path / "corrections.json").exists()
+    assert repo.store.load() == []
+
+
+def test_apply_correction_accepts_real_account_and_document(tmp_path: Path) -> None:
+    repo = _runtime_repo(tmp_path)
+
+    correction = apply_correction(repo, "T004", "4300", ["INV-2026-001"], vendor="Figma")
+
+    assert correction.corrected_account == "4300"
+    assert correction.corrected_match == "INV-2026-001"
+    assert len(repo.store.load()) == 1
 
 
 def test_pending_reruns_targets_vendor_siblings_only() -> None:

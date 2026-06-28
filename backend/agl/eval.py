@@ -47,7 +47,12 @@ class EvalReport(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     categorization_accuracy: float
-    match_accuracy: float
+    match_accuracy: float = Field(
+        description="Match accuracy over all scored transactions; includes the trivial no-document rows where empty match equals empty match."
+    )
+    reconciliation_accuracy: float = Field(
+        description="Match accuracy over only the transactions whose ground-truth match settles a document; the honest reconciliation metric."
+    )
     false_confidence_count: int
     false_confidence_categorization: int = 0
     false_confidence_reconciliation: int = 0
@@ -101,15 +106,19 @@ def _gate(scored: list[tuple[Decision, GroundTruth]], outcome: Outcome) -> GateS
 
 
 def run_eval(decisions: list[Decision], repo: Repository) -> EvalReport:
-    """Score decisions against ground truth: categorization and match accuracy, false-confidence
-    (auto-posted-and-wrong, target zero), per-outcome routing precision/recall (auto-post, review,
-    anomaly, request-document), and the raw routing counts.
+    """Score decisions against ground truth: categorization accuracy, match accuracy (all rows,
+    including the trivial no-document cases), reconciliation accuracy (document-settling rows only),
+    false-confidence (auto-posted-and-wrong, target zero), per-outcome routing precision/recall
+    (auto-post, review, anomaly, request-document), and the raw routing counts.
     """
     truth = repo.ground_truth()
     scored = _scored(decisions, truth)
 
     account_correct = sum(1 for d, g in scored if _account_correct(d, g))
     match_correct = sum(1 for d, g in scored if _match_correct(d, g))
+
+    reconciliation_scored = [(d, g) for d, g in scored if g.match]
+    reconciliation_correct = sum(1 for d, g in reconciliation_scored if _match_correct(d, g))
 
     false_confidence = sum(
         1
@@ -142,6 +151,8 @@ def run_eval(decisions: list[Decision], repo: Repository) -> EvalReport:
         "request_document": routed[Outcome.REQUEST_DOCUMENT],
         "categorization_correct": account_correct,
         "match_correct": match_correct,
+        "reconciliation_total": len(reconciliation_scored),
+        "reconciliation_correct": reconciliation_correct,
         "false_confidence_categorization": false_confidence_categorization,
         "false_confidence_reconciliation": false_confidence_reconciliation,
         "anomalies_expected": anomaly_gate.expected,
@@ -152,6 +163,7 @@ def run_eval(decisions: list[Decision], repo: Repository) -> EvalReport:
     return EvalReport(
         categorization_accuracy=_ratio(account_correct, len(scored)),
         match_accuracy=_ratio(match_correct, len(scored)),
+        reconciliation_accuracy=_ratio(reconciliation_correct, len(reconciliation_scored)),
         false_confidence_count=false_confidence,
         false_confidence_categorization=false_confidence_categorization,
         false_confidence_reconciliation=false_confidence_reconciliation,

@@ -138,6 +138,40 @@ def test_lift_report_without_eligible_rows_leaves_lift_unset() -> None:
     assert report.cold_categorization_accuracy == report.categorization_accuracy
 
 
+def test_reconciliation_accuracy_scores_only_document_settling_rows() -> None:
+    repo = Repository()
+    truth = repo.ground_truth()
+
+    settling = sorted((g for g in truth.values() if g.match), key=lambda g: g.transaction_id)
+    empty = sorted((g for g in truth.values() if not g.match), key=lambda g: g.transaction_id)
+    assert len(settling) >= 2 and len(empty) >= 2
+
+    correct_settle, wrong_settle = settling[0], settling[1]
+    empty_a, empty_b = empty[0], empty[1]
+    wrong_match = ["__no_such_document__"]
+    assert set(wrong_match) != set(wrong_settle.match)
+
+    decisions = [
+        _decision(
+            correct_settle.transaction_id,
+            correct_settle.account,
+            correct_settle.match,
+            Outcome.AUTO_POST,
+        ),
+        _decision(wrong_settle.transaction_id, wrong_settle.account, wrong_match, Outcome.REVIEW),
+        _decision(empty_a.transaction_id, empty_a.account, [], Outcome.AUTO_POST),
+        _decision(empty_b.transaction_id, empty_b.account, [], Outcome.AUTO_POST),
+    ]
+
+    report = run_eval(decisions, repo)
+
+    assert report.counts["reconciliation_total"] == 2
+    assert report.counts["reconciliation_correct"] == 1
+    assert report.reconciliation_accuracy == 0.5
+    assert report.match_accuracy == 0.75
+    assert report.reconciliation_accuracy < report.match_accuracy
+
+
 def test_false_confidence_is_split_per_task_and_only_counts_auto_posts() -> None:
     repo = Repository()
     truth = repo.ground_truth()

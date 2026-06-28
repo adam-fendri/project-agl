@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import shutil
 import tempfile
 from collections.abc import Generator
@@ -201,15 +200,6 @@ def corrections_suppressed(seeds_dir: Path = SEEDS) -> Generator[Repository, Non
         yield Repository(seeds_dir=cold_seeds, runtime_dir=Path(runtime_tmp))
 
 
-def _collision_map(repo: Repository, customer_id: str) -> dict[str, list[str]]:
-    claimed: dict[str, list[str]] = {}
-    for txn in repo.transactions(customer_id):
-        provided = repo.provided_match(txn.id)
-        if provided is not None:
-            claimed.setdefault(provided.document_id, []).append(txn.id)
-    return claimed
-
-
 @dataclass(frozen=True)
 class BatchResult:
     decisions: list[Decision]
@@ -219,9 +209,10 @@ class BatchResult:
 class LiftHarness:
     """Runs the batch twice — corrections suppressed (cold) then applied (warm) — to measure learning lift.
 
-    The collision map is always computed over the full transaction set so cross-transaction signals
-    (duplicate claims, already-settled documents) stay faithful even when only a subset is decided.
-    Per-transaction agent failures are retried and then recorded, never aborting the whole run.
+    The batch is processed sequentially in date order so the ``claimed_by`` collision map holds
+    resolved settlements (what earlier decisions actually settled): each transaction sees only earlier
+    decisions' matches, never its own. Per-transaction agent failures are retried and then recorded,
+    never aborting the whole run.
     """
 
     def __init__(
@@ -247,14 +238,19 @@ class LiftHarness:
         return cold, warm
 
     async def _batch(self, repo: Repository, subset: set[str] | None) -> BatchResult:
-        transactions = repo.transactions(self._customer)
-        claimed_by = _collision_map(repo, self._customer)
-        selected = [t for t in transactions if subset is None or t.id in subset]
+        selected = [t for t in repo.transactions(self._customer) if subset is None or t.id in subset]
         ordered = sorted(selected, key=lambda t: (t.booked_on, t.id))
-        semaphore = asyncio.Semaphore(self._concurrency)
-        results = await asyncio.gather(*(self._one(repo, txn, claimed_by, semaphore) for txn in ordered))
-        decisions = [decision for decision in results if decision is not None]
-        failed = [txn.id for txn, decision in zip(ordered, results) if decision is None]
+        claimed_by: dict[str, list[str]] = {}
+        decisions: list[Decision] = []
+        failed: list[str] = []
+        for txn in ordered:
+            decision = await self._one(repo, txn, claimed_by)
+            if decision is None:
+                failed.append(txn.id)
+                continue
+            decisions.append(decision)
+            for doc_id in decision.match:
+                claimed_by.setdefault(doc_id, []).append(decision.transaction_id)
         return BatchResult(decisions=decisions, failed=failed)
 
     async def _one(
@@ -262,13 +258,11 @@ class LiftHarness:
         repo: Repository,
         txn: Transaction,
         claimed_by: dict[str, list[str]],
-        semaphore: asyncio.Semaphore,
     ) -> Decision | None:
-        async with semaphore:
-            for attempt in range(self._retries + 1):
-                try:
-                    return await process(txn, repo, self._agent, claimed_by)
-                except Exception:
-                    if attempt == self._retries:
-                        return None
-            return None
+        for attempt in range(self._retries + 1):
+            try:
+                return await process(txn, repo, self._agent, claimed_by)
+            except Exception:
+                if attempt == self._retries:
+                    return None
+        return None

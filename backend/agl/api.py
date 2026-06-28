@@ -66,15 +66,6 @@ def _select_agent() -> AgentProtocol:
     return ClaudeCliAgent()
 
 
-def _collision_map(repo: Repository, customer_id: str) -> dict[str, list[str]]:
-    claimed: dict[str, list[str]] = {}
-    for txn in repo.transactions(customer_id):
-        provided = repo.provided_match(txn.id)
-        if provided is not None:
-            claimed.setdefault(provided.document_id, []).append(txn.id)
-    return claimed
-
-
 def _proposal_from_decision(decision: Decision) -> Proposal:
     return Proposal(
         vendor=decision.vendor,
@@ -207,11 +198,11 @@ class Console:
             )
             self._repo = self._repo.reload()
             reran = pending_reruns(correction, list(self._decisions.values()))
-            claimed_by = _collision_map(self._repo, self._customer)
             for affected in [txn_id, *reran]:
                 txn = self._find(affected)
                 if txn is None:
                     continue
+                claimed_by = self._resolved_claims(exclude=affected)
                 self._decisions[affected] = await process(txn, self._repo, self._agent, claimed_by)
                 self._posted.discard(affected)
             return CorrectResponse(correction_id=correction.id, reran=reran)
@@ -226,7 +217,7 @@ class Console:
     def trace(self, txn_id: str) -> Trace:
         decision = self.decision(txn_id)
         txn = self._transaction(txn_id)
-        claimed_by = _collision_map(self._repo, self._customer)
+        claimed_by = self._resolved_claims(exclude=txn_id)
         evidence = build_evidence(txn, self._repo, self._customer, claimed_by)
         proposal = _proposal_from_decision(decision)
         verdict = run_guard(proposal, txn, self._repo, claimed_by)
@@ -239,6 +230,20 @@ class Console:
             confidence_signals=list(decision.confidence_signals),
             decision=decision,
         )
+
+    def _resolved_claims(self, exclude: str | None = None) -> dict[str, list[str]]:
+        """The resolved-settlement collision map from the run's decisions, dropping ``exclude``'s own.
+
+        Holds what earlier decisions actually settled (each Decision's match), so re-running or tracing
+        a transaction is guarded against other decisions' resolved matches, never its own stale prior.
+        """
+        claimed: dict[str, list[str]] = {}
+        for decision in self._decisions.values():
+            if decision.transaction_id == exclude:
+                continue
+            for doc_id in decision.match:
+                claimed.setdefault(doc_id, []).append(decision.transaction_id)
+        return claimed
 
     def _find(self, txn_id: str) -> Transaction | None:
         for txn in self._repo.transactions(self._customer):

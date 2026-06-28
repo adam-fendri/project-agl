@@ -43,23 +43,19 @@ async def process(
 
 
 async def run_batch(repo: Repository, agent: AgentProtocol, customer_id: str) -> list[Decision]:
-    """Process every transaction for a customer, computing the cross-transaction duplicate-collision map first."""
-    transactions = repo.transactions(customer_id)
-    claimed_by = _claimed_by(repo, transactions)
+    """Process every transaction in date order, accumulating the resolved-settlement collision map.
+
+    ``claimed_by`` holds resolved settlements (what earlier decisions actually settled): each
+    transaction is decided against only earlier decisions' matches, never its own provided prior.
+    """
+    claimed_by: dict[str, list[str]] = {}
     decisions: list[Decision] = []
-    for txn in sorted(transactions, key=lambda t: (t.booked_on, t.id)):
-        decisions.append(await process(txn, repo, agent, claimed_by))
+    for txn in sorted(repo.transactions(customer_id), key=lambda t: (t.booked_on, t.id)):
+        decision = await process(txn, repo, agent, claimed_by)
+        decisions.append(decision)
+        for doc_id in decision.match:
+            claimed_by.setdefault(doc_id, []).append(decision.transaction_id)
     return decisions
-
-
-def _claimed_by(repo: Repository, transactions: list[Transaction]) -> dict[str, list[str]]:
-    claimed: dict[str, list[str]] = {}
-    for txn in transactions:
-        provided = repo.provided_match(txn.id)
-        if provided is None:
-            continue
-        claimed.setdefault(provided.document_id, []).append(txn.id)
-    return claimed
 
 
 def _assemble(

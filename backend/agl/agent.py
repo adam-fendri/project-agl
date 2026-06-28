@@ -33,10 +33,10 @@ Decide which open invoice or bill, if any, this transaction settles. This is the
 </reconcile>
 
 <anomaly>
-Raise an anomaly only on a clear, grounded signal; otherwise leave it unset and proceed. If you are merely unsure of the category, lower account_confidence instead of raising an anomaly. Use the type that fits:
-- duplicate: the SAME document was already settled by an earlier transaction. One payment that clears two different documents whose totals sum to the amount is a normal combination, not a duplicate.
+Raise an anomaly only on a clear, grounded signal you can see in this single transaction; otherwise leave it unset and proceed. If you are merely unsure of the category, lower account_confidence instead of raising an anomaly. Use the type that fits:
 - missing_counterpart: a material, one-off invoice or bill that should exist for this payment is absent from the evidence. This asks the entrepreneur for the document, so reserve it for substantial one-off supplier or client payments; routine, recurring, payroll, tax, and small payments have no document by nature.
 - suspicious_vendor or unusual_amount: only when the evidence itself shows a concrete problem.
+A duplicate payment is settled across other transactions you do not see here, so the system detects it from the full set: never raise a duplicate yourself. One payment that clears two different documents whose totals sum to the amount is a normal combination, not an anomaly.
 </anomaly>
 
 <confidence>

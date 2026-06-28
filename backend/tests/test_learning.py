@@ -211,6 +211,6 @@ def test_correction_enters_a_sibling_transactions_evidence(tmp_path: Path) -> No
 
     sibling = repo.transaction("T099")
     assert sibling is not None
-    evidence = build_evidence(sibling, repo, CUSTOMER, {})
+    evidence = build_evidence(sibling, repo, CUSTOMER)
 
     assert any(c.corrected_account == "4300" for c in evidence.corrections)

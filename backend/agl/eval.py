@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import shutil
 import tempfile
 from collections.abc import Generator
@@ -9,8 +10,16 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from agl.engine import process
-from agl.models import AgentProtocol, Decision, GroundTruth, Outcome, Transaction
+from agl.engine import decide, finalize
+from agl.models import (
+    AgentProtocol,
+    Decision,
+    Evidence,
+    GroundTruth,
+    Outcome,
+    Proposal,
+    Transaction,
+)
 from agl.repository import SEEDS, Repository
 
 
@@ -225,10 +234,10 @@ class BatchResult:
 class LiftHarness:
     """Runs the batch twice — corrections suppressed (cold) then applied (warm) — to measure learning lift.
 
-    The batch is processed sequentially in date order so the ``claimed_by`` collision map holds
-    resolved settlements (what earlier decisions actually settled): each transaction sees only earlier
-    decisions' matches, never its own. Per-transaction agent failures are retried and then recorded,
-    never aborting the whole run.
+    Each batch is two-pass: PASS 1 decides every transaction concurrently (bounded by the semaphore,
+    with per-transaction retries), then ``settled_by`` is resolved over the full set of matches and PASS 2
+    finalizes each transaction. A duplicate is the later claimant of a shared document, independent of
+    processing order. Per-transaction agent failures are retried and then recorded, never aborting the run.
     """
 
     def __init__(
@@ -255,29 +264,38 @@ class LiftHarness:
 
     async def _batch(self, repo: Repository, subset: set[str] | None) -> BatchResult:
         selected = [t for t in repo.transactions(self._customer) if subset is None or t.id in subset]
-        ordered = sorted(selected, key=lambda t: (t.booked_on, t.id))
-        claimed_by: dict[str, list[str]] = {}
+        semaphore = asyncio.Semaphore(self._concurrency)
+
+        async def _bounded(txn: Transaction) -> tuple[Evidence, Proposal] | None:
+            async with semaphore:
+                return await self._decide_one(repo, txn)
+
+        decided = await asyncio.gather(*(_bounded(txn) for txn in selected))
+
+        settled_by: dict[str, list[str]] = {}
+        for txn, item in zip(selected, decided, strict=True):
+            if item is None:
+                continue
+            _evidence, proposal = item
+            for doc_id in proposal.match:
+                settled_by.setdefault(doc_id, []).append(txn.id)
+
         decisions: list[Decision] = []
         failed: list[str] = []
-        for txn in ordered:
-            decision = await self._one(repo, txn, claimed_by)
-            if decision is None:
+        for txn, item in zip(selected, decided, strict=True):
+            if item is None:
                 failed.append(txn.id)
                 continue
-            decisions.append(decision)
-            for doc_id in decision.match:
-                claimed_by.setdefault(doc_id, []).append(decision.transaction_id)
+            evidence, proposal = item
+            decisions.append(finalize(txn, repo, evidence, proposal, settled_by))
         return BatchResult(decisions=decisions, failed=failed)
 
-    async def _one(
-        self,
-        repo: Repository,
-        txn: Transaction,
-        claimed_by: dict[str, list[str]],
-    ) -> Decision | None:
+    async def _decide_one(
+        self, repo: Repository, txn: Transaction
+    ) -> tuple[Evidence, Proposal] | None:
         for attempt in range(self._retries + 1):
             try:
-                return await process(txn, repo, self._agent, claimed_by)
+                return await decide(txn, repo, self._agent)
             except Exception:
                 if attempt == self._retries:
                     return None

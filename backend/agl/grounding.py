@@ -17,17 +17,13 @@ from agl.reconcile import Candidate, find_candidates
 from agl.repository import Repository
 
 
-def build_evidence(
-    txn: Transaction,
-    repo: Repository,
-    customer_id: str,
-    claimed_by: dict[str, list[str]],
-) -> Evidence:
+def build_evidence(txn: Transaction, repo: Repository, customer_id: str) -> Evidence:
     """Assemble the grounded Evidence for one transaction.
 
     Pulls the chart of accounts, the provided match plus reconciliation candidates with their
     computed facts (amount vs document total, direction, paid/unpaid status), the relevant
-    corrections, vendor history, and any duplicate-collision note (from ``claimed_by``).
+    corrections, and vendor history. No duplicate hint reaches the agent: a duplicate is a
+    cross-transaction fact the guard resolves from the full set of matches, never a per-call signal.
     """
     accounts = repo.accounts(customer_id)
     invoices = repo.invoices(customer_id)
@@ -38,7 +34,6 @@ def build_evidence(
     candidates = _candidate_facts(txn, repo, invoices, bills, provided, transactions)
     corrections = _relevant_corrections(txn, repo.corrections(customer_id))
     vendor_history = _vendor_history(txn, transactions, repo)
-    duplicate_note = _duplicate_note(txn, repo, claimed_by, transactions)
     known_ids = {i.id for i in invoices} | {b.id for b in bills}
     referenced = referenced_documents(txn, known_ids)
 
@@ -49,7 +44,6 @@ def build_evidence(
         candidates=candidates,
         corrections=corrections,
         vendor_history=vendor_history,
-        duplicate_note=duplicate_note,
         referenced_documents=referenced,
     )
 
@@ -58,10 +52,6 @@ def render_prompt(evidence: Evidence) -> str:
     """Render the Evidence into the user-prompt text the agent reads for its single structured-output call."""
     lines: list[str] = []
     lines.extend(_render_transaction(evidence.transaction))
-    if evidence.duplicate_note is not None:
-        lines.append("")
-        lines.append("## ALSO CLAIMED BY ANOTHER TRANSACTION")
-        lines.append(evidence.duplicate_note)
     lines.append("")
     lines.extend(_render_accounts(evidence.accounts))
     if evidence.referenced_documents:
@@ -287,32 +277,6 @@ def _vendor_history(
             )
         )
     return history
-
-
-def _duplicate_note(
-    txn: Transaction,
-    repo: Repository,
-    claimed_by: dict[str, list[str]],
-    transactions: list[Transaction],
-) -> str | None:
-    provided = repo.provided_match(txn.id)
-    if provided is None:
-        return None
-    claimants = [c for c in claimed_by.get(provided.document_id, []) if c != txn.id]
-    if not claimants:
-        return None
-    by_id = {t.id: t for t in transactions}
-    earlier = sorted(
-        c for c in claimants if c in by_id and (by_id[c].booked_on, c) < (txn.booked_on, txn.id)
-    )
-    if not earlier:
-        return None
-    doc = repo.document(provided.document_id)
-    status = doc.status.value if doc is not None else "unknown"
-    return (
-        f"Document {provided.document_id} (status: {status}) is also claimed by earlier "
-        f"transaction(s) {', '.join(earlier)}."
-    )
 
 
 def _eur(amount: Decimal) -> str:

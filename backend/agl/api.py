@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from agl.agent import ClaudeCliAgent, LlmAgent
-from agl.engine import process, run_batch
+from agl.engine import decide, finalize, run_batch
 from agl.eval import EvalReport, run_eval
 from agl.grounding import build_evidence, render_prompt
 from agl.guard import run_guard
@@ -97,7 +97,6 @@ def _context(evidence: Evidence) -> dict[str, object]:
         "candidates": [list(fact.candidate.document_ids) for fact in evidence.candidates],
         "corrections": [correction.id for correction in evidence.corrections],
         "vendor_history": [entry.transaction_id for entry in evidence.vendor_history],
-        "duplicate_note": evidence.duplicate_note,
     }
     return context
 
@@ -204,8 +203,11 @@ class Console:
                 txn = self._find(affected)
                 if txn is None:
                     continue
-                claimed_by = self._resolved_claims(exclude=affected)
-                self._decisions[affected] = await process(txn, self._repo, self._agent, claimed_by)
+                settled_by = self._resolved_claims(exclude=affected)
+                evidence, proposal = await decide(txn, self._repo, self._agent)
+                self._decisions[affected] = finalize(
+                    txn, self._repo, evidence, proposal, settled_by
+                )
                 self._posted.discard(affected)
             return CorrectResponse(correction_id=correction.id, reran=reran)
 
@@ -219,10 +221,10 @@ class Console:
     def trace(self, txn_id: str) -> Trace:
         decision = self.decision(txn_id)
         txn = self._transaction(txn_id)
-        claimed_by = self._resolved_claims(exclude=txn_id)
-        evidence = build_evidence(txn, self._repo, self._customer, claimed_by)
+        settled_by = self._resolved_claims(exclude=txn_id)
+        evidence = build_evidence(txn, self._repo, self._customer)
         proposal = _proposal_from_decision(decision)
-        verdict = run_guard(proposal, txn, self._repo, claimed_by)
+        verdict = run_guard(proposal, txn, self._repo, settled_by)
         return Trace(
             transaction_id=txn_id,
             context=_context(evidence),
@@ -234,10 +236,12 @@ class Console:
         )
 
     def _resolved_claims(self, exclude: str | None = None) -> dict[str, list[str]]:
-        """The resolved-settlement collision map from the run's decisions, dropping ``exclude``'s own.
+        """The full resolved-settlement map (doc id -> transaction ids) over every current decision,
+        dropping ``exclude``'s own match.
 
-        Holds what earlier decisions actually settled (each Decision's match), so re-running or tracing
-        a transaction is guarded against other decisions' resolved matches, never its own stale prior.
+        Used as ``settled_by`` so re-running or tracing a transaction is guarded against the full set of
+        the other decisions' resolved matches, never its own stale prior. Order-independent: a duplicate
+        is the later claimant of a shared document.
         """
         claimed: dict[str, list[str]] = {}
         for decision in self._decisions.values():

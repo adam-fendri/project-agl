@@ -28,7 +28,7 @@ def run_guard(
     proposal: Proposal,
     txn: Transaction,
     repo: Repository,
-    claimed_by: dict[str, list[str]],
+    settled_by: dict[str, list[str]],
 ) -> GuardVerdict:
     """Check the agent's proposal against hard facts before any auto-post.
 
@@ -68,9 +68,8 @@ def run_guard(
         if _revenue_on_settlement(txn, proposal, rubriek_by_number):
             failures.append("revenue_on_settled_invoice")
 
-        txn_by_id = {t.id: t for t in repo.transactions(txn.customer_id)}
         for doc in proposal.match:
-            if _claimed_earlier(doc, txn, claimed_by, txn_by_id):
+            if _claimed_earlier(doc, txn, settled_by, repo):
                 failures.append(f"duplicate:{doc}")
 
     anomaly = proposal.anomaly
@@ -180,14 +179,20 @@ def _amount_ambiguous(
 def _claimed_earlier(
     doc: str,
     txn: Transaction,
-    claimed_by: dict[str, list[str]],
-    txn_by_id: dict[str, Transaction],
+    settled_by: dict[str, list[str]],
+    repo: Repository,
 ) -> bool:
+    """True when another transaction with an earlier (booked_on, id) also settled ``doc``.
+
+    A duplicate is a cross-transaction fact: a document settled by two or more transactions. The later
+    claimant (by booked_on, then id) is the duplicate; the earliest claimant is never flagged. Order of
+    processing is irrelevant — the full ``settled_by`` map and each claimant's booked_on decide it.
+    """
     this_key: tuple[date, str] = (txn.booked_on, txn.id)
-    for other in claimed_by.get(doc, []):
+    for other in settled_by.get(doc, []):
         if other == txn.id:
             continue
-        other_txn = txn_by_id.get(other)
+        other_txn = repo.transaction(other)
         other_key: tuple[date, str] = (
             (other_txn.booked_on, other) if other_txn is not None else (txn.booked_on, other)
         )

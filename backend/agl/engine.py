@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from decimal import Decimal
 
 from agl.grounding import build_evidence, counterparty_agrees, party_of, referenced_documents
@@ -29,33 +30,61 @@ _SEVERITY: dict[Outcome, int] = {
 _MATERIAL_EUR = Decimal("1000")
 
 
-async def process(
+_CONCURRENCY = 8
+
+
+async def decide(
+    txn: Transaction, repo: Repository, agent: AgentProtocol
+) -> tuple[Evidence, Proposal]:
+    """Ground the transaction and ask the agent to decide it, independently of every other one.
+
+    No duplicate hint reaches the agent: a duplicate is a cross-transaction fact resolved later from
+    the full set of matches, so this pass carries no shared state and assumes no processing order.
+    """
+    evidence = build_evidence(txn, repo, txn.customer_id)
+    proposal = await agent.decide(evidence)
+    return evidence, proposal
+
+
+def finalize(
     txn: Transaction,
     repo: Repository,
-    agent: AgentProtocol,
-    claimed_by: dict[str, list[str]],
+    evidence: Evidence,
+    proposal: Proposal,
+    settled_by: dict[str, list[str]],
 ) -> Decision:
-    """Run one transaction through ground -> decide -> guard -> route, producing a Decision."""
-    evidence = build_evidence(txn, repo, txn.customer_id, claimed_by)
-    proposal = await agent.decide(evidence)
-    verdict = run_guard(proposal, txn, repo, claimed_by)
+    """Guard the proposal against the full resolved-settlement map, then assemble the Decision."""
+    verdict = run_guard(proposal, txn, repo, settled_by)
     return _assemble(txn, repo, evidence, proposal, verdict)
 
 
 async def run_batch(repo: Repository, agent: AgentProtocol, customer_id: str) -> list[Decision]:
-    """Process every transaction in date order, accumulating the resolved-settlement collision map.
+    """Decide every transaction concurrently, then finalize each against the full settlement map.
 
-    ``claimed_by`` holds resolved settlements (what earlier decisions actually settled): each
-    transaction is decided against only earlier decisions' matches, never its own provided prior.
+    PASS 1 grounds and decides each transaction independently, bounded by a semaphore, with no shared
+    state. PASS 2 builds ``settled_by`` (doc id -> the transaction ids that matched it) over every
+    proposal, then finalizes each transaction, so a duplicate is the later claimant of a shared
+    document regardless of processing order. Decisions are returned in input order; there is no sort.
     """
-    claimed_by: dict[str, list[str]] = {}
-    decisions: list[Decision] = []
-    for txn in sorted(repo.transactions(customer_id), key=lambda t: (t.booked_on, t.id)):
-        decision = await process(txn, repo, agent, claimed_by)
-        decisions.append(decision)
-        for doc_id in decision.match:
-            claimed_by.setdefault(doc_id, []).append(decision.transaction_id)
-    return decisions
+    transactions = repo.transactions(customer_id)
+    semaphore = asyncio.Semaphore(_CONCURRENCY)
+
+    async def _bounded(txn: Transaction) -> tuple[Transaction, Evidence, Proposal]:
+        async with semaphore:
+            evidence, proposal = await decide(txn, repo, agent)
+            return txn, evidence, proposal
+
+    decided = await asyncio.gather(*(_bounded(txn) for txn in transactions))
+
+    settled_by: dict[str, list[str]] = {}
+    for txn, _evidence, proposal in decided:
+        for doc_id in proposal.match:
+            settled_by.setdefault(doc_id, []).append(txn.id)
+
+    return [
+        finalize(txn, repo, evidence, proposal, settled_by)
+        for txn, evidence, proposal in decided
+    ]
 
 
 def _assemble(
@@ -166,8 +195,6 @@ def _confidence_signals(
     else:
         signals.append("no_match")
 
-    if evidence.duplicate_note is not None:
-        signals.append("duplicate_collision")
     signals.extend(f"guard:{check}" for check in verdict.failed_checks)
     return signals
 

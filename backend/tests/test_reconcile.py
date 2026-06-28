@@ -26,7 +26,7 @@ def _candidate_document_sets(repo: Repository, txn: Transaction) -> set[frozense
 
 
 def _evidence_document_sets(repo: Repository, txn: Transaction) -> set[frozenset[str]]:
-    evidence = build_evidence(txn, repo, CUSTOMER, {})
+    evidence = build_evidence(txn, repo, CUSTOMER)
     return {frozenset(c.candidate.document_ids) for c in evidence.candidates}
 
 

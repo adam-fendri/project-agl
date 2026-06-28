@@ -208,7 +208,6 @@ class Evidence:
     candidates: list[CandidateFact]
     corrections: list[Correction]
     vendor_history: list[VendorHistoryEntry]
-    duplicate_note: str | None
     referenced_documents: list[str] = field(default_factory=list[str])
 
 

@@ -9,7 +9,7 @@ from pathlib import Path
 
 from agl.agent import ClaudeCliAgent, LlmAgent
 from agl.eval import EvalReport, LiftHarness, lift_report
-from agl.models import AgentProtocol, Decision, GroundTruth
+from agl.models import AgentProtocol, Decision, GroundTruth, Outcome
 from agl.repository import Repository
 
 _DEFAULT_CUSTOMER = "studio-vondel"
@@ -94,6 +94,38 @@ def _eligible_rows(
     return rows
 
 
+def _per_decision(warm: list[Decision], truth: dict[str, GroundTruth]) -> list[dict[str, object]]:
+    """Per-decision diagnostic rows scored against ground truth, so the artifact alone reveals which
+    transactions are false-confidence, anomaly false positives, or otherwise wrong.
+    """
+    rows: list[dict[str, object]] = []
+    for decision in sorted(warm, key=lambda d: d.transaction_id):
+        gt = truth.get(decision.transaction_id)
+        if gt is None:
+            continue
+        account_correct = decision.account == gt.account
+        match_correct = set(decision.match) == set(gt.match)
+        rows.append(
+            {
+                "transaction_id": decision.transaction_id,
+                "account": decision.account,
+                "gt_account": gt.account,
+                "account_correct": account_correct,
+                "match": decision.match,
+                "gt_match": gt.match,
+                "match_correct": match_correct,
+                "outcome": decision.outcome.value,
+                "gt_outcome": gt.outcome.value,
+                "anomaly": decision.anomaly.type.value if decision.anomaly is not None else None,
+                "false_confidence": decision.outcome is Outcome.AUTO_POST
+                and not (account_correct and match_correct),
+                "anomaly_false_positive": decision.outcome is Outcome.ANOMALY
+                and gt.outcome is not Outcome.ANOMALY,
+            }
+        )
+    return rows
+
+
 def _summary(report: EvalReport) -> str:
     gate_lines = [
         f"  {name:>16}: precision {gate.precision:.2f} recall {gate.recall:.2f} "
@@ -153,6 +185,7 @@ async def run(args: argparse.Namespace) -> EvalReport:
         "eligible_rows": _eligible_rows(
             cold_result.decisions, warm_result.decisions, truth, report.eligible_ids
         ),
+        "per_decision": _per_decision(warm_result.decisions, truth),
     }
 
     out = Path(args.out)

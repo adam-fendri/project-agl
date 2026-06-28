@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
@@ -209,6 +209,7 @@ class Evidence:
     corrections: list[Correction]
     vendor_history: list[VendorHistoryEntry]
     duplicate_note: str | None
+    referenced_documents: list[str] = field(default_factory=list[str])
 
 
 class GuardVerdict(BaseModel):

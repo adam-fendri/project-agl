@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from agl.grounding import build_evidence, counterparty_agrees, party_of
+from agl.grounding import build_evidence, counterparty_agrees, party_of, referenced_documents
 from agl.guard import run_guard
 from agl.models import (
     AgentProtocol,
@@ -115,6 +115,11 @@ def _material_uncorroborated(txn: Transaction, repo: Repository, proposal: Propo
         return False
     documents = [doc for did in proposal.match if (doc := repo.document(did)) is not None]
     if not documents or not any(doc.vat != 0 for doc in documents):
+        return False
+    known_ids = {i.id for i in repo.invoices(txn.customer_id)} | {
+        b.id for b in repo.bills(txn.customer_id)
+    }
+    if set(referenced_documents(txn, known_ids)) & set(proposal.match):
         return False
     return not all(counterparty_agrees(party_of(doc), txn) for doc in documents)
 

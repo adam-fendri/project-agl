@@ -39,6 +39,8 @@ def build_evidence(
     corrections = _relevant_corrections(txn, repo.corrections(customer_id))
     vendor_history = _vendor_history(txn, transactions, repo)
     duplicate_note = _duplicate_note(txn, repo, claimed_by, transactions)
+    known_ids = {i.id for i in invoices} | {b.id for b in bills}
+    referenced = referenced_documents(txn, known_ids)
 
     return Evidence(
         transaction=txn,
@@ -48,6 +50,7 @@ def build_evidence(
         corrections=corrections,
         vendor_history=vendor_history,
         duplicate_note=duplicate_note,
+        referenced_documents=referenced,
     )
 
 
@@ -61,6 +64,9 @@ def render_prompt(evidence: Evidence) -> str:
         lines.append(evidence.duplicate_note)
     lines.append("")
     lines.extend(_render_accounts(evidence.accounts))
+    if evidence.referenced_documents:
+        lines.append("")
+        lines.extend(_render_reference(evidence.referenced_documents))
     lines.append("")
     lines.extend(_render_provided(evidence.transaction, evidence.provided_match))
     lines.append("")
@@ -94,6 +100,19 @@ def _vendor_matches_raw(vendor: str, raw: str) -> bool:
 def counterparty_agrees(party: str, txn: Transaction) -> bool:
     """True when the document party shares a distinctive token with the transaction line (counterparty + description)."""
     return _vendor_matches_raw(party, _raw_string(txn))
+
+
+_DOCUMENT_REFERENCE = re.compile(r"\b(?:INV-\d{4}-\d{3}|B-\d{2})\b")
+
+
+def referenced_documents(txn: Transaction, known_ids: set[str]) -> list[str]:
+    """Our own document ids written literally in the payment remittance, restricted to ids we hold.
+
+    A hard reconciliation signal: the payer quotes our invoice/bill id (``INV-2026-004``, ``B-01``)
+    in the bank line. Counterparty-own numbers (``FACTUUR SP-2026-018``) never match our two id shapes.
+    """
+    found = {ref for ref in _DOCUMENT_REFERENCE.findall(_raw_string(txn)) if ref in known_ids}
+    return sorted(found)
 
 
 def transactions_share_vendor(a: Transaction, b: Transaction) -> bool:
@@ -365,6 +384,13 @@ def _render_fact(txn: Transaction, fact: CandidateFact) -> list[str]:
             f"  {doc.id}: {party_of(doc)}, gross {_eur(doc.gross)}, status {doc.status.value}"
         )
     return lines
+
+
+def _render_reference(referenced: list[str]) -> list[str]:
+    return [
+        "## PAYMENT REFERENCE",
+        f"This payment's remittance names document(s): {', '.join(referenced)}",
+    ]
 
 
 def _render_provided(txn: Transaction, provided: CandidateFact | None) -> list[str]:

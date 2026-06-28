@@ -3,7 +3,12 @@ from __future__ import annotations
 from datetime import date, timedelta
 from decimal import Decimal
 
-from agl.grounding import counterparty_agrees, party_of, transactions_share_vendor
+from agl.grounding import (
+    counterparty_agrees,
+    party_of,
+    referenced_documents,
+    transactions_share_vendor,
+)
 from agl.models import (
     AnomalyType,
     Bill,
@@ -50,12 +55,15 @@ def run_guard(
     if proposal.match:
         invoices_by_id = {i.id: i for i in repo.invoices(txn.customer_id)}
         bills_by_id = {b.id: b for b in repo.bills(txn.customer_id)}
+        referenced = set(referenced_documents(txn, set(invoices_by_id) | set(bills_by_id)))
         verdict = validate_match(txn, proposal.match, invoices_by_id, bills_by_id)
         if not verdict.direction_ok:
             failures.append("direction_mismatch")
         if not verdict.sums_exactly:
             failures.append("amount_mismatch")
-        if _amount_ambiguous(proposal.match, txn, invoices_by_id, bills_by_id):
+        if referenced and not (referenced & set(proposal.match)):
+            failures.append("reference_mismatch")
+        if _amount_ambiguous(proposal.match, txn, invoices_by_id, bills_by_id, referenced):
             failures.append("amount_ambiguous")
         if _revenue_on_settlement(txn, proposal, rubriek_by_number):
             failures.append("revenue_on_settled_invoice")
@@ -147,7 +155,10 @@ def _amount_ambiguous(
     txn: Transaction,
     invoices_by_id: dict[str, Invoice],
     bills_by_id: dict[str, Bill],
+    referenced: set[str],
 ) -> bool:
+    if referenced & set(match):
+        return False
     matched = [
         doc
         for did in match

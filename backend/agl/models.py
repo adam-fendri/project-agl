@@ -219,6 +219,7 @@ class Decision(BaseModel):
     account_reasoning: str
     account_confidence: Confidence
     account_unlisted: bool = False
+    vat_treatment: str = ""
     match: list[str]
     match_reasoning: str | None
     match_status: MatchStatus

@@ -106,6 +106,11 @@ function accountLabel(number) {
   return acc ? `${number} · ${acc.name_en}` : number;
 }
 
+function vatLabel(treatment) {
+  const rate = { standard: "21%", reduced: "9%", exempt: "0% / exempt" }[treatment];
+  return rate ? `${rate} (${treatment})` : treatment;
+}
+
 async function loadStatics() {
   const [accounts, txns] = await Promise.all([
     fetch("/accounts.json").then((r) => r.json()),
@@ -261,6 +266,7 @@ function openCard(txnId) {
   const acctBlock = block("Categorization — the agent's choice", traceBtn);
   acctBlock.append(el("div", "choice", accountLabel(d.account)));
   acctBlock.append(el("div", "reason", d.account_reasoning));
+  if (d.vat_treatment) acctBlock.append(el("div", "vat", `VAT treatment: ${vatLabel(d.vat_treatment)}`));
   const acctChips = el("div", "chips");
   acctChips.style.marginTop = "8px";
   acctChips.append(confChip("account confidence", d.account_confidence));

@@ -146,6 +146,9 @@ def _assemble(
     verdict: GuardVerdict,
 ) -> Decision:
     match_status = _match_status(txn, repo, proposal.match)
+    vat_treatment = next(
+        (a.vat_treatment for a in evidence.accounts if a.number == proposal.account), ""
+    )
     return Decision(
         transaction_id=txn.id,
         vendor=proposal.vendor,
@@ -153,6 +156,7 @@ def _assemble(
         account_reasoning=proposal.account_reasoning,
         account_confidence=proposal.account_confidence,
         account_unlisted=proposal.account_unlisted,
+        vat_treatment=vat_treatment,
         match=list(proposal.match),
         match_reasoning=proposal.match_reasoning,
         match_status=match_status,

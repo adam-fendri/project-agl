@@ -1,0 +1,102 @@
+[
+  {
+    "id": "INV-2025-041",
+    "customer_id": "studio-vondel",
+    "client": "Lumen Retail",
+    "issued_on": "2025-12-18",
+    "net": "8000",
+    "vat": "1680",
+    "gross": "9680",
+    "status": "paid"
+  },
+  {
+    "id": "INV-2025-042",
+    "customer_id": "studio-vondel",
+    "client": "Kasa Tech",
+    "issued_on": "2025-12-22",
+    "net": "12500",
+    "vat": "2625",
+    "gross": "15125",
+    "status": "paid"
+  },
+  {
+    "id": "INV-2026-001",
+    "customer_id": "studio-vondel",
+    "client": "Gemeente Haarlem",
+    "issued_on": "2026-01-12",
+    "net": "18000",
+    "vat": "3780",
+    "gross": "21780",
+    "status": "unpaid"
+  },
+  {
+    "id": "INV-2026-002",
+    "customer_id": "studio-vondel",
+    "client": "Brightseed",
+    "issued_on": "2026-01-20",
+    "net": "4200",
+    "vat": "882",
+    "gross": "5082",
+    "status": "paid"
+  },
+  {
+    "id": "INV-2026-003",
+    "customer_id": "studio-vondel",
+    "client": "Mendo",
+    "issued_on": "2026-01-28",
+    "net": "3500",
+    "vat": "735",
+    "gross": "4235",
+    "status": "paid"
+  },
+  {
+    "id": "INV-2026-004",
+    "customer_id": "studio-vondel",
+    "client": "Voss & Partners",
+    "issued_on": "2026-02-05",
+    "net": "6000",
+    "vat": "1260",
+    "gross": "7260",
+    "status": "paid"
+  },
+  {
+    "id": "INV-2026-005",
+    "customer_id": "studio-vondel",
+    "client": "Lumen Retail",
+    "issued_on": "2026-02-16",
+    "net": "6000",
+    "vat": "1260",
+    "gross": "7260",
+    "status": "paid"
+  },
+  {
+    "id": "INV-2026-006",
+    "customer_id": "studio-vondel",
+    "client": "Kasa Tech",
+    "issued_on": "2026-02-20",
+    "net": "1790",
+    "vat": "375.90",
+    "gross": "2165.90",
+    "status": "paid"
+  },
+  {
+    "id": "INV-2026-007",
+    "customer_id": "studio-vondel",
+    "client": "Kasa Tech",
+    "issued_on": "2026-02-23",
+    "net": "1000",
+    "vat": "210",
+    "gross": "1210",
+    "status": "paid"
+  },
+  {
+    "id": "INV-2026-008",
+    "customer_id": "studio-vondel",
+    "client": "NorthBridge Ltd",
+    "issued_on": "2026-02-27",
+    "net": "5000",
+    "vat": "0",
+    "gross": "5000",
+    "status": "unpaid"
+  }
+]

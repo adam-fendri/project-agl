@@ -1,0 +1,222 @@
+[
+  {
+    "id": "B-01",
+    "customer_id": "studio-vondel",
+    "supplier": "Kantoorpand (rent Jan)",
+    "received_on": "2026-01-01",
+    "net": "3500",
+    "vat": "735",
+    "gross": "4235",
+    "account": "4200",
+    "status": "paid"
+  },
+  {
+    "id": "B-02",
+    "customer_id": "studio-vondel",
+    "supplier": "Kantoorpand (rent Feb)",
+    "received_on": "2026-02-01",
+    "net": "3500",
+    "vat": "735",
+    "gross": "4235",
+    "account": "4200",
+    "status": "paid"
+  },
+  {
+    "id": "B-03",
+    "customer_id": "studio-vondel",
+    "supplier": "Kantoorpand (rent Mar)",
+    "received_on": "2026-03-01",
+    "net": "3500",
+    "vat": "735",
+    "gross": "4235",
+    "account": "4200",
+    "status": "paid"
+  },
+  {
+    "id": "B-04",
+    "customer_id": "studio-vondel",
+    "supplier": "Lichtdruk Amsterdam (print run)",
+    "received_on": "2026-03-25",
+    "net": "1250",
+    "vat": "262.50",
+    "gross": "1512.50",
+    "account": "4400",
+    "status": "unpaid"
+  },
+  {
+    "id": "B-05",
+    "customer_id": "studio-vondel",
+    "supplier": "Juridisch Bureau Zuidas (legal advice)",
+    "received_on": "2026-03-26",
+    "net": "1600",
+    "vat": "336",
+    "gross": "1936",
+    "account": "4710",
+    "status": "unpaid"
+  },
+  {
+    "id": "B-06",
+    "customer_id": "studio-vondel",
+    "supplier": "Google Workspace",
+    "received_on": "2026-01-06",
+    "net": "288",
+    "vat": "60.48",
+    "gross": "348.48",
+    "account": "4300",
+    "status": "paid"
+  },
+  {
+    "id": "B-07",
+    "customer_id": "studio-vondel",
+    "supplier": "AWS (Jan)",
+    "received_on": "2026-01-31",
+    "net": "420",
+    "vat": "88.20",
+    "gross": "508.20",
+    "account": "4310",
+    "status": "paid"
+  },
+  {
+    "id": "B-08",
+    "customer_id": "studio-vondel",
+    "supplier": "AWS (Feb)",
+    "received_on": "2026-02-28",
+    "net": "465",
+    "vat": "97.65",
+    "gross": "562.65",
+    "account": "4310",
+    "status": "paid"
+  },
+  {
+    "id": "B-09",
+    "customer_id": "studio-vondel",
+    "supplier": "Eneco",
+    "received_on": "2026-01-10",
+    "net": "310",
+    "vat": "65.10",
+    "gross": "375.10",
+    "account": "4210",
+    "status": "paid"
+  },
+  {
+    "id": "B-10",
+    "customer_id": "studio-vondel",
+    "supplier": "KPN",
+    "received_on": "2026-01-12",
+    "net": "140",
+    "vat": "29.40",
+    "gross": "169.40",
+    "account": "4510",
+    "status": "paid"
+  },
+  {
+    "id": "B-11",
+    "customer_id": "studio-vondel",
+    "supplier": "Studio Pixel (freelance dev)",
+    "received_on": "2026-02-10",
+    "net": "6500",
+    "vat": "1365",
+    "gross": "7865",
+    "account": "4100",
+    "status": "paid"
+  },
+  {
+    "id": "B-12",
+    "customer_id": "studio-vondel",
+    "supplier": "J. de Vries (freelance motion)",
+    "received_on": "2026-02-14",
+    "net": "2400",
+    "vat": "504",
+    "gross": "2904",
+    "account": "4100",
+    "status": "paid"
+  },
+  {
+    "id": "B-13",
+    "customer_id": "studio-vondel",
+    "supplier": "Mark Hendriks (freelance copy)",
+    "received_on": "2026-03-05",
+    "net": "1800",
+    "vat": "378",
+    "gross": "2178",
+    "account": "4100",
+    "status": "paid"
+  },
+  {
+    "id": "B-14",
+    "customer_id": "studio-vondel",
+    "supplier": "Centraal Beheer (insurance)",
+    "received_on": "2026-01-08",
+    "net": "185",
+    "vat": "0",
+    "gross": "185",
+    "account": "4700",
+    "status": "paid"
+  },
+  {
+    "id": "B-15",
+    "customer_id": "studio-vondel",
+    "supplier": "Amac (MacBook Pro)",
+    "received_on": "2026-02-03",
+    "net": "2200",
+    "vat": "462",
+    "gross": "2662",
+    "account": "0150",
+    "status": "paid"
+  },
+  {
+    "id": "B-16",
+    "customer_id": "studio-vondel",
+    "supplier": "NS Business (travel)",
+    "received_on": "2026-02-20",
+    "net": "220.18",
+    "vat": "19.82",
+    "gross": "240",
+    "account": "4600",
+    "status": "paid"
+  },
+  {
+    "id": "B-17",
+    "customer_id": "studio-vondel",
+    "supplier": "LinkedIn Ads",
+    "received_on": "2026-02-25",
+    "net": "600",
+    "vat": "126",
+    "gross": "726",
+    "account": "4400",
+    "status": "paid"
+  },
+  {
+    "id": "B-18",
+    "customer_id": "studio-vondel",
+    "supplier": "Google Ads",
+    "received_on": "2026-03-02",
+    "net": "450",
+    "vat": "94.50",
+    "gross": "544.50",
+    "account": "4400",
+    "status": "paid"
+  },
+  {
+    "id": "B-19",
+    "customer_id": "studio-vondel",
+    "supplier": "Administratiekantoor Mol",
+    "received_on": "2026-01-15",
+    "net": "350",
+    "vat": "73.50",
+    "gross": "423.50",
+    "account": "4710",
+    "status": "paid"
+  },
+  {
+    "id": "B-20",
+    "customer_id": "studio-vondel",
+    "supplier": "Coolblue (monitor)",
+    "received_on": "2026-03-10",
+    "net": "380",
+    "vat": "79.80",
+    "gross": "459.80",
+    "account": "4500",
+    "status": "paid"
+  }
+]

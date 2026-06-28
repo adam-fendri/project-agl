@@ -1,0 +1,27 @@
+[project]
+name = "agl"
+version = "0.1.0"
+description = "Agentic General Ledger: accountant-supervised categorization and reconciliation (Neno challenge)"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.9",
+    "pydantic-ai>=0.4",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "logfire>=2.6",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["agl"]
+
+[tool.pyright]
+typeCheckingMode = "strict"
+venvPath = "."
+venv = ".venv"
+
+[tool.ruff]
+line-length = 100

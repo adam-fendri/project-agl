@@ -1,0 +1,206 @@
+{
+  "metadata": {
+    "generated_at": "2026-06-28T08:51:08.938757+00:00",
+    "as_of_date": "2026-06-28",
+    "agent": "claude",
+    "model_arg": "sonnet",
+    "model_id": "claude-sonnet-4-6",
+    "customer_id": "studio-vondel",
+    "subset": "all",
+    "concurrency": 6,
+    "retries": 2,
+    "warm_decided": 100,
+    "warm_failed": [],
+    "cold_decided": 100,
+    "cold_failed": []
+  },
+  "report": {
+    "categorization_accuracy": 0.91,
+    "match_accuracy": 0.99,
+    "false_confidence_count": 1,
+    "counts": {
+      "total": 100,
+      "auto_post": 53,
+      "review": 9,
+      "anomaly": 5,
+      "request_document": 33,
+      "categorization_correct": 91,
+      "match_correct": 99,
+      "anomalies_expected": 1,
+      "anomalies_caught": 1,
+      "anomaly_false_positives": 4
+    },
+    "gates": {
+      "auto_post": {
+        "outcome": "auto_post",
+        "predicted": 53,
+        "expected": 84,
+        "correct": 45,
+        "precision": 0.8490566037735849,
+        "recall": 0.5357142857142857
+      },
+      "review": {
+        "outcome": "review",
+        "predicted": 9,
+        "expected": 13,
+        "correct": 2,
+        "precision": 0.2222222222222222,
+        "recall": 0.15384615384615385
+      },
+      "anomaly": {
+        "outcome": "anomaly",
+        "predicted": 5,
+        "expected": 1,
+        "correct": 1,
+        "precision": 0.2,
+        "recall": 1.0
+      },
+      "request_document": {
+        "outcome": "request_document",
+        "predicted": 33,
+        "expected": 2,
+        "correct": 2,
+        "precision": 0.06060606060606061,
+        "recall": 1.0
+      }
+    },
+    "cold_categorization_accuracy": 0.89,
+    "eligible_ids": [
+      "T016",
+      "T026",
+      "T037",
+      "T043",
+      "T049",
+      "T075",
+      "T079",
+      "T084",
+      "T093"
+    ],
+    "eligible_count": 9,
+    "cold_accuracy": 0.3333333333333333,
+    "corrected_accuracy": 0.5555555555555556,
+    "lift": 0.22222222222222227
+  },
+  "eligible_rows": [
+    {
+      "transaction_id": "T016",
+      "cold_account": "4100",
+      "warm_account": "0600",
+      "gt_account": "0600",
+      "cold_match": [],
+      "warm_match": [],
+      "gt_match": [],
+      "cold_correct": false,
+      "warm_correct": true,
+      "became_correct": true
+    },
+    {
+      "transaction_id": "T026",
+      "cold_account": "1700",
+      "warm_account": "4300",
+      "gt_account": "1700",
+      "cold_match": [],
+      "warm_match": [],
+      "gt_match": [],
+      "cold_correct": true,
+      "warm_correct": false,
+      "became_correct": false
+    },
+    {
+      "transaction_id": "T037",
+      "cold_account": "4300",
+      "warm_account": "4310",
+      "gt_account": "4300",
+      "cold_match": [],
+      "warm_match": [],
+      "gt_match": [],
+      "cold_correct": true,
+      "warm_correct": false,
+      "became_correct": false
+    },
+    {
+      "transaction_id": "T043",
+      "cold_account": "1600",
+      "warm_account": "4100",
+      "gt_account": "4100",
+      "cold_match": [
+        "B-12"
+      ],
+      "warm_match": [
+        "B-12"
+      ],
+      "gt_match": [
+        "B-12"
+      ],
+      "cold_correct": false,
+      "warm_correct": true,
+      "became_correct": true
+    },
+    {
+      "transaction_id": "T049",
+      "cold_account": "0100",
+      "warm_account": "4900",
+      "gt_account": "0150",
+      "cold_match": [],
+      "warm_match": [],
+      "gt_match": [],
+      "cold_correct": false,
+      "warm_correct": false,
+      "became_correct": false
+    },
+    {
+      "transaction_id": "T075",
+      "cold_account": "0150",
+      "warm_account": "4500",
+      "gt_account": "4500",
+      "cold_match": [
+        "B-20"
+      ],
+      "warm_match": [
+        "B-20"
+      ],
+      "gt_match": [
+        "B-20"
+      ],
+      "cold_correct": false,
+      "warm_correct": true,
+      "became_correct": true
+    },
+    {
+      "transaction_id": "T079",
+      "cold_account": "4100",
+      "warm_account": "0600",
+      "gt_account": "0600",
+      "cold_match": [],
+      "warm_match": [],
+      "gt_match": [],
+      "cold_correct": false,
+      "warm_correct": true,
+      "became_correct": true
+    },
+    {
+      "transaction_id": "T084",
+      "cold_account": "4310",
+      "warm_account": "4300",
+      "gt_account": "4300",
+      "cold_match": [],
+      "warm_match": [],
+      "gt_match": [],
+      "cold_correct": false,
+      "warm_correct": true,
+      "became_correct": true
+    },
+    {
+      "transaction_id": "T093",
+      "cold_account": "1700",
+      "warm_account": "4300",
+      "gt_account": "1700",
+      "cold_match": [],
+      "warm_match": [],
+      "gt_match": [],
+      "cold_correct": true,
+      "warm_correct": false,
+      "became_correct": false
+    }
+  ]
+}

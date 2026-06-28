@@ -1,0 +1,282 @@
+[
+  {
+    "number": "0100",
+    "customer_id": "studio-vondel",
+    "name_nl": "Inventaris",
+    "name_en": "Equipment & furniture",
+    "rubriek": "0",
+    "rgs_group": "BMva"
+  },
+  {
+    "number": "0150",
+    "customer_id": "studio-vondel",
+    "name_nl": "Computers & hardware",
+    "name_en": "Computers & hardware",
+    "rubriek": "0",
+    "rgs_group": "BMva"
+  },
+  {
+    "number": "0200",
+    "customer_id": "studio-vondel",
+    "name_nl": "Afschrijving inventaris",
+    "name_en": "Accumulated depreciation",
+    "rubriek": "0",
+    "rgs_group": "BMva"
+  },
+  {
+    "number": "0500",
+    "customer_id": "studio-vondel",
+    "name_nl": "Eigen vermogen",
+    "name_en": "Owner's equity",
+    "rubriek": "0",
+    "rgs_group": "BEiv"
+  },
+  {
+    "number": "0600",
+    "customer_id": "studio-vondel",
+    "name_nl": "Privé-opnamen",
+    "name_en": "Owner's drawings",
+    "rubriek": "0",
+    "rgs_group": "BEiv"
+  },
+  {
+    "number": "1100",
+    "customer_id": "studio-vondel",
+    "name_nl": "Bank — ING zakelijk",
+    "name_en": "Business bank account",
+    "rubriek": "1",
+    "rgs_group": "BLimBanRba"
+  },
+  {
+    "number": "1300",
+    "customer_id": "studio-vondel",
+    "name_nl": "Debiteuren",
+    "name_en": "Accounts receivable",
+    "rubriek": "1",
+    "rgs_group": "BVor`"
+  },
+  {
+    "number": "1600",
+    "customer_id": "studio-vondel",
+    "name_nl": "Crediteuren",
+    "name_en": "Accounts payable",
+    "rubriek": "1",
+    "rgs_group": "BSch`"
+  },
+  {
+    "number": "1500",
+    "customer_id": "studio-vondel",
+    "name_nl": "Te vorderen BTW",
+    "name_en": "Input VAT (reclaimable)",
+    "rubriek": "1",
+    "rgs_group": "BVor`"
+  },
+  {
+    "number": "1510",
+    "customer_id": "studio-vondel",
+    "name_nl": "Af te dragen BTW",
+    "name_en": "Output VAT (payable)",
+    "rubriek": "1",
+    "rgs_group": "BSch`"
+  },
+  {
+    "number": "1700",
+    "customer_id": "studio-vondel",
+    "name_nl": "Loonheffingen te betalen",
+    "name_en": "Payroll tax payable",
+    "rubriek": "1",
+    "rgs_group": "BSch`"
+  },
+  {
+    "number": "4000",
+    "customer_id": "studio-vondel",
+    "name_nl": "Brutolonen",
+    "name_en": "Gross wages & salaries",
+    "rubriek": "4",
+    "rgs_group": "WPer"
+  },
+  {
+    "number": "4010",
+    "customer_id": "studio-vondel",
+    "name_nl": "Sociale lasten",
+    "name_en": "Employer social security",
+    "rubriek": "4",
+    "rgs_group": "WPer"
+  },
+  {
+    "number": "4020",
+    "customer_id": "studio-vondel",
+    "name_nl": "Pensioenlasten",
+    "name_en": "Pension contributions",
+    "rubriek": "4",
+    "rgs_group": "WPer"
+  },
+  {
+    "number": "4100",
+    "customer_id": "studio-vondel",
+    "name_nl": "Inhuur freelancers",
+    "name_en": "Freelance / subcontractor",
+    "rubriek": "4",
+    "rgs_group": "WPer"
+  },
+  {
+    "number": "4200",
+    "customer_id": "studio-vondel",
+    "name_nl": "Huur kantoor",
+    "name_en": "Office rent",
+    "rubriek": "4",
+    "rgs_group": "WBed"
+  },
+  {
+    "number": "4210",
+    "customer_id": "studio-vondel",
+    "name_nl": "Servicekosten & nuts",
+    "name_en": "Service charges & utilities",
+    "rubriek": "4",
+    "rgs_group": "WBed"
+  },
+  {
+    "number": "4300",
+    "customer_id": "studio-vondel",
+    "name_nl": "Software & licenties",
+    "name_en": "Software & licenses",
+    "rubriek": "4",
+    "rgs_group": "WBed"
+  },
+  {
+    "number": "4310",
+    "customer_id": "studio-vondel",
+    "name_nl": "Hosting & IT",
+    "name_en": "Hosting & IT infrastructure",
+    "rubriek": "4",
+    "rgs_group": "WBed"
+  },
+  {
+    "number": "4400",
+    "customer_id": "studio-vondel",
+    "name_nl": "Marketing & advertenties",
+    "name_en": "Marketing & advertising",
+    "rubriek": "4",
+    "rgs_group": "WVkf"
+  },
+  {
+    "number": "4410",
+    "customer_id": "studio-vondel",
+    "name_nl": "Representatiekosten",
+    "name_en": "Representation / client entertainment",
+    "rubriek": "4",
+    "rgs_group": "WVkf"
+  },
+  {
+    "number": "4500",
+    "customer_id": "studio-vondel",
+    "name_nl": "Kantoorbenodigdheden",
+    "name_en": "Office supplies",
+    "rubriek": "4",
+    "rgs_group": "WBed"
+  },
+  {
+    "number": "4510",
+    "customer_id": "studio-vondel",
+    "name_nl": "Telefoon & internet",
+    "name_en": "Phone & internet",
+    "rubriek": "4",
+    "rgs_group": "WBed"
+  },
+  {
+    "number": "4600",
+    "customer_id": "studio-vondel",
+    "name_nl": "Reiskosten",
+    "name_en": "Travel costs",
+    "rubriek": "4",
+    "rgs_group": "WBed"
+  },
+  {
+    "number": "4700",
+    "customer_id": "studio-vondel",
+    "name_nl": "Verzekeringen",
+    "name_en": "Insurance",
+    "rubriek": "4",
+    "rgs_group": "WBed"
+  },
+  {
+    "number": "4710",
+    "customer_id": "studio-vondel",
+    "name_nl": "Administratie- & accountantskosten",
+    "name_en": "Accounting & admin fees",
+    "rubriek": "4",
+    "rgs_group": "WAkf"
+  },
+  {
+    "number": "4720",
+    "customer_id": "studio-vondel",
+    "name_nl": "Bankkosten",
+    "name_en": "Bank charges",
+    "rubriek": "4",
+    "rgs_group": "WBed"
+  },
+  {
+    "number": "4730",
+    "customer_id": "studio-vondel",
+    "name_nl": "Abonnementen & contributies",
+    "name_en": "Subscriptions & memberships",
+    "rubriek": "4",
+    "rgs_group": "WBed"
+  },
+  {
+    "number": "4800",
+    "customer_id": "studio-vondel",
+    "name_nl": "Afschrijvingskosten",
+    "name_en": "Depreciation expense",
+    "rubriek": "4",
+    "rgs_group": "WAfs"
+  },
+  {
+    "number": "4900",
+    "customer_id": "studio-vondel",
+    "name_nl": "Overige kosten",
+    "name_en": "Miscellaneous / other costs",
+    "rubriek": "4",
+    "rgs_group": "WBed"
+  },
+  {
+    "number": "8000",
+    "customer_id": "studio-vondel",
+    "name_nl": "Omzet ontwerp & development",
+    "name_en": "Design & dev service revenue",
+    "rubriek": "8",
+    "rgs_group": "WOmz"
+  },
+  {
+    "number": "8010",
+    "customer_id": "studio-vondel",
+    "name_nl": "Omzet consultancy",
+    "name_en": "Consultancy revenue",
+    "rubriek": "8",
+    "rgs_group": "WOmz"
+  },
+  {
+    "number": "8100",
+    "customer_id": "studio-vondel",
+    "name_nl": "Overige opbrengsten",
+    "name_en": "Other income",
+    "rubriek": "8",
+    "rgs_group": "WOvb"
+  },
+  {
+    "number": "9000",
+    "customer_id": "studio-vondel",
+    "name_nl": "Rentebaten & -lasten",
+    "name_en": "Interest income / expense",
+    "rubriek": "9",
+    "rgs_group": "WFbe"
+  },
+  {
+    "number": "9100",
+    "customer_id": "studio-vondel",
+    "name_nl": "Koersverschillen",
+    "name_en": "FX differences",
+    "rubriek": "9",
+    "rgs_group": "WFbe"
+  }
+]

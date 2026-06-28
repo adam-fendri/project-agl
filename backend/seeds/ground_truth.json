@@ -1,0 +1,653 @@
+[
+  {
+    "transaction_id": "T001",
+    "account": "4200",
+    "match": [
+      "B-01"
+    ],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T002",
+    "account": "4700",
+    "match": [
+      "B-14"
+    ],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T003",
+    "account": "4300",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T004",
+    "account": "4300",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T005",
+    "account": "4300",
+    "match": [
+      "B-06"
+    ],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T006",
+    "account": "4300",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T007",
+    "account": "1300",
+    "match": [
+      "INV-2025-041"
+    ],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T008",
+    "account": "1510",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T009",
+    "account": "4210",
+    "match": [
+      "B-09"
+    ],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T010",
+    "account": "4410",
+    "match": [],
+    "outcome": "review"
+  },
+  {
+    "transaction_id": "T011",
+    "account": "4510",
+    "match": [
+      "B-10"
+    ],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T012",
+    "account": "1300",
+    "match": [
+      "INV-2025-042"
+    ],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T013",
+    "account": "4710",
+    "match": [
+      "B-19"
+    ],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T014",
+    "account": "4500",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T015",
+    "account": "4510",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T016",
+    "account": "0600",
+    "match": [],
+    "outcome": "review"
+  },
+  {
+    "transaction_id": "T017",
+    "account": "4600",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T018",
+    "account": "4500",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T019",
+    "account": "4000",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T020",
+    "account": "4000",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T021",
+    "account": "4000",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T022",
+    "account": "4000",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T023",
+    "account": "4000",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T024",
+    "account": "4000",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T025",
+    "account": "4000",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T026",
+    "account": "1700",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T027",
+    "account": "4720",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T028",
+    "account": "4020",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T029",
+    "account": "4310",
+    "match": [
+      "B-07"
+    ],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T030",
+    "account": "4730",
+    "match": [],
+    "outcome": "review"
+  },
+  {
+    "transaction_id": "T031",
+    "account": "4200",
+    "match": [
+      "B-02"
+    ],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T032",
+    "account": "4210",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T033",
+    "account": "0150",
+    "match": [
+      "B-15"
+    ],
+    "outcome": "review"
+  },
+  {
+    "transaction_id": "T034",
+    "account": "4300",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T035",
+    "account": "4510",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T036",
+    "account": "4500",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T037",
+    "account": "4300",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T038",
+    "account": "4600",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T039",
+    "account": "1300",
+    "match": [
+      "INV-2026-003"
+    ],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T040",
+    "account": "4100",
+    "match": [
+      "B-11"
+    ],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T041",
+    "account": "4400",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T042",
+    "account": "4410",
+    "match": [],
+    "outcome": "review"
+  },
+  {
+    "transaction_id": "T043",
+    "account": "4100",
+    "match": [
+      "B-12"
+    ],
+    "outcome": "review"
+  },
+  {
+    "transaction_id": "T044",
+    "account": "4400",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T045",
+    "account": "1300",
+    "match": [
+      "INV-2026-002"
+    ],
+    "outcome": "review"
+  },
+  {
+    "transaction_id": "T046",
+    "account": "4100",
+    "match": [],
+    "outcome": "anomaly"
+  },
+  {
+    "transaction_id": "T047",
+    "account": "4600",
+    "match": [
+      "B-16"
+    ],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T048",
+    "account": "4900",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T049",
+    "account": "0150",
+    "match": [],
+    "outcome": "request_document"
+  },
+  {
+    "transaction_id": "T050",
+    "account": "4000",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T051",
+    "account": "4000",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T052",
+    "account": "4000",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T053",
+    "account": "4000",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T054",
+    "account": "4000",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T055",
+    "account": "4000",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T056",
+    "account": "4000",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T057",
+    "account": "4400",
+    "match": [
+      "B-17"
+    ],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T058",
+    "account": "1700",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T059",
+    "account": "4020",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T060",
+    "account": "4720",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T061",
+    "account": "4600",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T062",
+    "account": "4310",
+    "match": [
+      "B-08"
+    ],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T063",
+    "account": "4500",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T064",
+    "account": "4730",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T065",
+    "account": "4210",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T066",
+    "account": "4200",
+    "match": [
+      "B-03"
+    ],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T067",
+    "account": "4210",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T068",
+    "account": "4400",
+    "match": [
+      "B-18"
+    ],
+    "outcome": "review"
+  },
+  {
+    "transaction_id": "T069",
+    "account": "4300",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T070",
+    "account": "4510",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T071",
+    "account": "4300",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T072",
+    "account": "1300",
+    "match": [
+      "INV-2026-004"
+    ],
+    "outcome": "review"
+  },
+  {
+    "transaction_id": "T073",
+    "account": "4100",
+    "match": [
+      "B-13"
+    ],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T074",
+    "account": "1300",
+    "match": [
+      "INV-2026-005"
+    ],
+    "outcome": "review"
+  },
+  {
+    "transaction_id": "T075",
+    "account": "4500",
+    "match": [
+      "B-20"
+    ],
+    "outcome": "review"
+  },
+  {
+    "transaction_id": "T076",
+    "account": "1300",
+    "match": [
+      "INV-2026-006",
+      "INV-2026-007"
+    ],
+    "outcome": "review"
+  },
+  {
+    "transaction_id": "T077",
+    "account": "4300",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T078",
+    "account": "4600",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T079",
+    "account": "0600",
+    "match": [],
+    "outcome": "review"
+  },
+  {
+    "transaction_id": "T080",
+    "account": "4900",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T081",
+    "account": "4900",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T082",
+    "account": "4500",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T083",
+    "account": "4400",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T084",
+    "account": "4300",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T085",
+    "account": "4300",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T086",
+    "account": "4000",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T087",
+    "account": "4000",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T088",
+    "account": "4000",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T089",
+    "account": "4000",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T090",
+    "account": "4000",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T091",
+    "account": "4000",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T092",
+    "account": "4000",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T093",
+    "account": "1700",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T094",
+    "account": "4020",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T095",
+    "account": "4720",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T096",
+    "account": "4900",
+    "match": [],
+    "outcome": "request_document"
+  },
+  {
+    "transaction_id": "T097",
+    "account": "4400",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T098",
+    "account": "4600",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T099",
+    "account": "4300",
+    "match": [],
+    "outcome": "auto_post"
+  },
+  {
+    "transaction_id": "T100",
+    "account": "4300",
+    "match": [],
+    "outcome": "auto_post"
+  }
+]

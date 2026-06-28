@@ -1,0 +1,52 @@
+[
+  {
+    "id": "C1",
+    "customer_id": "studio-vondel",
+    "transaction_id": null,
+    "vendor": "J. de Vries",
+    "corrected_account": "4100",
+    "corrected_match": null,
+    "note": "Personal-name SEPA transfer, not one of the payrolled employees, with a freelance invoice ref -> freelancer 4100, not wages 4000.",
+    "created_at": "2025-12-15T09:00:00"
+  },
+  {
+    "id": "C2",
+    "customer_id": "studio-vondel",
+    "transaction_id": null,
+    "vendor": "Google Ads",
+    "corrected_account": "4400",
+    "corrected_match": null,
+    "note": "GOOGLE *ADS -> marketing 4400; GOOGLE *GSUITE / Workspace -> software 4300. Same vendor root, split by product.",
+    "created_at": "2025-12-15T09:00:00"
+  },
+  {
+    "id": "C3",
+    "customer_id": "studio-vondel",
+    "transaction_id": null,
+    "vendor": "",
+    "corrected_account": "0150",
+    "corrected_match": null,
+    "note": "Hardware with net value >= ~EUR450 is an asset (0150, depreciated); below that, office supplies (4500).",
+    "created_at": "2025-12-15T09:00:00"
+  },
+  {
+    "id": "C4",
+    "customer_id": "studio-vondel",
+    "transaction_id": null,
+    "vendor": "T. Bakker",
+    "corrected_account": "0600",
+    "corrected_match": null,
+    "note": "A transfer to the owner that is NOT the fixed monthly salary (off-cycle date, round amount, no description) is an owner draw 0600, never an expense.",
+    "created_at": "2025-12-15T09:00:00"
+  },
+  {
+    "id": "C5",
+    "customer_id": "studio-vondel",
+    "transaction_id": null,
+    "vendor": "",
+    "corrected_account": null,
+    "corrected_match": "by_counterparty",
+    "note": "When more than one open invoice shares the same amount, disambiguate by the paying counterparty, not amount alone.",
+    "created_at": "2025-12-15T09:00:00"
+  }
+]

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Project AGL — Accountant Console</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="dot"></span>
+      <h1>Project AGL</h1>
+      <span class="sub">Accountant-supervised categorization &amp; reconciliation</span>
+    </div>
+    <div class="metrics" id="metrics" aria-live="polite"></div>
+    <div class="topactions">
+      <button id="run-btn" class="btn btn-run" title="Re-run the engine over all transactions">Run engine</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="col col-queue">
+      <div class="tabs" role="tablist">
+        <button id="tab-queue" class="tab active" role="tab">Review queue <span class="badge" id="queue-count">0</span></button>
+        <button id="tab-posted" class="tab" role="tab">Auto-posted <span class="badge" id="posted-count">0</span></button>
+      </div>
+      <p class="hint" id="list-hint">Ranked by impact &times; uncertainty. Anomalies pinned to the top.</p>
+      <ul class="list" id="list"></ul>
+    </section>
+
+    <section class="col col-card" id="card-pane">
+      <div class="empty" id="card-empty">Select an item from the queue to open its card.</div>
+      <article class="card" id="card" hidden></article>
+    </section>
+
+    <aside class="col col-trace" id="trace-pane" hidden>
+      <div class="trace-head">
+        <h2>Trace</h2>
+        <button id="trace-close" class="btn btn-ghost" title="Close trace">&times;</button>
+      </div>
+      <div class="trace-body" id="trace-body"></div>
+    </aside>
+  </main>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

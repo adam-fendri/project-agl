@@ -80,6 +80,39 @@ class _UnlistedAgent:
         )
 
 
+class _FlakyAgent:
+    """Raises for one transaction (a hard agent failure), returns a normal proposal for a second, abstains on the rest."""
+
+    def __init__(self, failing: str, ok: str, account: str) -> None:
+        self._failing = failing
+        self._ok = ok
+        self._account = account
+
+    async def decide(self, evidence: Evidence) -> Proposal:
+        txn = evidence.transaction
+        if txn.id == self._failing:
+            raise RuntimeError("simulated agent failure")
+        if txn.id == self._ok:
+            return Proposal(
+                vendor=txn.counterparty,
+                account=self._account,
+                account_reasoning="scripted",
+                account_confidence=Confidence.HIGH,
+                match=[],
+                match_reasoning=None,
+                match_confidence=Confidence.HIGH,
+            )
+        return Proposal(
+            vendor=txn.counterparty,
+            account=evidence.accounts[0].number,
+            account_reasoning="scripted",
+            account_confidence=Confidence.LOW,
+            match=[],
+            match_reasoning=None,
+            match_confidence=Confidence.LOW,
+        )
+
+
 def _decisions(agent: AgentProtocol, repo: Repository) -> dict[str, Decision]:
     return {d.transaction_id: d for d in asyncio.run(run_batch(repo, agent, CUSTOMER))}
 
@@ -145,3 +178,17 @@ def test_bill_verified_categorisation_auto_posts(repo: Repository) -> None:
 
     assert decision.outcome is Outcome.AUTO_POST
     assert "account_verified" in decision.confidence_signals
+
+
+def test_agent_failure_fails_closed_to_review_without_aborting_batch(repo: Repository) -> None:
+    agent = _FlakyAgent(failing="T006", ok="T003", account="4300")
+
+    decisions = _decisions(agent, repo)
+
+    failed = decisions["T006"]
+    assert failed.outcome is Outcome.REVIEW
+    assert failed.account_confidence is Confidence.LOW
+    assert "agent_error" in failed.confidence_signals
+
+    assert decisions["T003"].outcome is Outcome.AUTO_POST
+    assert len(decisions) == len(repo.transactions(CUSTOMER))

@@ -40,6 +40,7 @@ _MATERIAL_EUR = Decimal("1000")
 
 
 _CONCURRENCY = 8
+_RETRIES = 2
 
 
 async def decide(
@@ -67,6 +68,25 @@ def finalize(
     return _assemble(txn, repo, evidence, proposal, verdict)
 
 
+def _failed_decision(txn: Transaction) -> Decision:
+    """Fail closed: the agent returned no valid decision, so route the transaction to a human rather than drop it or abort the run."""
+    return Decision(
+        transaction_id=txn.id,
+        vendor=txn.counterparty,
+        account="",
+        account_reasoning="agent did not return a valid decision after retries; routed to review",
+        account_confidence=Confidence.LOW,
+        match=[],
+        match_reasoning=None,
+        match_status=MatchStatus.NONE,
+        match_confidence=Confidence.LOW,
+        anomaly=None,
+        confidence_signals=["agent_error"],
+        outcome=Outcome.REVIEW,
+        sources=[],
+    )
+
+
 async def run_batch(repo: Repository, agent: AgentProtocol, customer_id: str) -> list[Decision]:
     """Decide every transaction concurrently, then finalize each against the full settlement map.
 
@@ -78,22 +98,33 @@ async def run_batch(repo: Repository, agent: AgentProtocol, customer_id: str) ->
     transactions = repo.transactions(customer_id)
     semaphore = asyncio.Semaphore(_CONCURRENCY)
 
-    async def _bounded(txn: Transaction) -> tuple[Transaction, Evidence, Proposal]:
+    async def _bounded(txn: Transaction) -> tuple[Transaction, Evidence | None, Proposal | None]:
         async with semaphore:
-            evidence, proposal = await decide(txn, repo, agent)
-            return txn, evidence, proposal
+            for attempt in range(_RETRIES + 1):
+                try:
+                    evidence, proposal = await decide(txn, repo, agent)
+                    return txn, evidence, proposal
+                except Exception:
+                    if attempt == _RETRIES:
+                        return txn, None, None
+            return txn, None, None
 
     decided = await asyncio.gather(*(_bounded(txn) for txn in transactions))
 
     settled_by: dict[str, list[str]] = {}
     for txn, _evidence, proposal in decided:
+        if proposal is None:
+            continue
         for doc_id in proposal.match:
             settled_by.setdefault(doc_id, []).append(txn.id)
 
-    return [
-        finalize(txn, repo, evidence, proposal, settled_by)
-        for txn, evidence, proposal in decided
-    ]
+    decisions: list[Decision] = []
+    for txn, evidence, proposal in decided:
+        if evidence is None or proposal is None:
+            decisions.append(_failed_decision(txn))
+        else:
+            decisions.append(finalize(txn, repo, evidence, proposal, settled_by))
+    return decisions
 
 
 def _assemble(

@@ -19,6 +19,10 @@ served by the existing FastAPI app over the endpoints already in `agl/api.py`.
   "N similar transactions re-run"), **Explain** (on-demand narration).
 - **Auto-posted** (tab) — the auto-posted ledger plus anything accepted,
   spot-checkable without re-running.
+- **Handled** (tab) — the flagged outcomes the accountant acted on: anomalies
+  flagged and held, and document requests logged. The card's next-action button
+  (e.g. **Flag duplicate**, **Request document**) records the action via
+  `POST /transaction/{id}/handle` and moves the entry out of the active queue.
 - **Trace drawer** (right) — `View trace ↗` on any card: the grounded context,
   the exact prompt sent to the model, the raw model proposal, and the guard
   verification.
@@ -52,12 +56,14 @@ The page is a thin client over the live API — no business logic lives in the U
 
 | UI action            | Endpoint |
 |----------------------|----------|
-| load (current state) | `GET /queue`, `GET /posted`, `GET /metrics` |
+| load (current state) | `GET /queue`, `GET /posted`, `GET /handled`, `GET /metrics` |
 | Run engine           | `POST /run` |
 | queue                | `GET /queue` |
 | auto-posted          | `GET /posted` |
+| handled              | `GET /handled` |
 | metrics bar          | `GET /metrics` |
 | Accept & post        | `POST /transaction/{id}/accept` |
+| Flag / request       | `POST /transaction/{id}/handle` |
 | Correct              | `POST /transaction/{id}/correct` |
 | Explain              | `POST /transaction/{id}/explain` |
 | View trace           | `GET /trace/{id}` |

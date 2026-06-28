@@ -31,6 +31,28 @@ const FLAG_ACTION = {
   unusual_amount: "Confirm amount",
 };
 
+const HANDLED_LABEL = {
+  flag_duplicate: "Flagged & held",
+  request_document: "Document requested",
+};
+
+const HANDLED_OUTCOME_CLASS = {
+  flag_duplicate: "anomaly",
+  request_document: "request_document",
+};
+
+const LIST_HINT = {
+  queue: "Ranked by impact × uncertainty. Anomalies pinned to the top.",
+  posted: "Auto-posted plus accepted entries. Spot-check before sign-off.",
+  handled: "Flagged anomalies held and document requests logged. Out of the active queue.",
+};
+
+const EMPTY_LABEL = {
+  queue: "Queue is clear.",
+  posted: "Nothing posted yet.",
+  handled: "Nothing flagged or requested yet.",
+};
+
 function blockedActionLabel(d) {
   if (d.outcome === "request_document") return "Request document";
   if (d.anomaly && FLAG_ACTION[d.anomaly.type]) return FLAG_ACTION[d.anomaly.type];
@@ -99,18 +121,21 @@ function indexDecisions(list) {
 }
 
 async function refresh() {
-  const [queue, posted, metrics] = await Promise.all([
+  const [queue, posted, handled, metrics] = await Promise.all([
     api("/queue"),
     api("/posted"),
+    api("/handled"),
     api("/metrics"),
   ]);
   indexDecisions(queue);
   indexDecisions(posted);
   state.queue = queue;
   state.posted = posted;
+  state.handled = handled;
   renderMetrics(metrics);
   document.getElementById("queue-count").textContent = String(queue.length);
   document.getElementById("posted-count").textContent = String(posted.length);
+  document.getElementById("handled-count").textContent = String(handled.length);
   renderList();
 }
 
@@ -134,34 +159,34 @@ function renderMetrics(m) {
 }
 
 function listSource() {
-  return state.tab === "queue" ? state.queue || [] : state.posted || [];
+  if (state.tab === "posted") return state.posted || [];
+  if (state.tab === "handled") return state.handled || [];
+  return state.queue || [];
 }
 
 function renderList() {
   const ul = document.getElementById("list");
   ul.innerHTML = "";
-  const hint = document.getElementById("list-hint");
-  hint.textContent = state.tab === "queue"
-    ? "Ranked by impact × uncertainty. Anomalies pinned to the top."
-    : "Auto-posted plus accepted entries. Spot-check before sign-off.";
+  document.getElementById("list-hint").textContent = LIST_HINT[state.tab];
   const source = listSource();
   if (source.length === 0) {
     ul.append(renderEmptyState());
     return;
   }
-  for (const d of source) {
-    ul.append(renderItem(d));
+  const render = state.tab === "handled" ? renderHandledItem : renderItem;
+  for (const entry of source) {
+    ul.append(render(entry));
   }
 }
 
 function engineHasRun() {
-  return (state.queue || []).length > 0 || (state.posted || []).length > 0;
+  return (state.queue || []).length > 0 || (state.posted || []).length > 0 || (state.handled || []).length > 0;
 }
 
 function renderEmptyState() {
   const li = el("li", "empty");
   if (engineHasRun()) {
-    li.textContent = state.tab === "queue" ? "Queue is clear." : "Nothing posted yet.";
+    li.textContent = EMPTY_LABEL[state.tab];
     return li;
   }
   li.append(el("div", null, "No decisions yet. Run the engine to categorize and reconcile the transactions."));
@@ -297,10 +322,14 @@ function renderActions(txnId, d) {
     acceptBtn.addEventListener("click", () => onAccept(txnId));
     actions.append(acceptBtn);
   } else {
-    const blockedBtn = el("button", "btn btn-accept", blockedActionLabel(d));
-    blockedBtn.disabled = true;
-    blockedBtn.title = "Resolve this flag before the entry can be posted.";
-    actions.append(blockedBtn);
+    const isHandled = (state.handled || []).some((h) => h.transaction_id === txnId);
+    const handleBtn = el("button", "btn btn-accept", isHandled ? "Handled ✓" : blockedActionLabel(d));
+    handleBtn.disabled = isHandled;
+    handleBtn.title = isHandled
+      ? "Logged. This entry is out of the active queue."
+      : "Record this next action and move the entry out of the active queue.";
+    if (!isHandled) handleBtn.addEventListener("click", () => onHandle(txnId));
+    actions.append(handleBtn);
   }
 
   const correctBtn = el("button", "btn btn-correct", "Correct");
@@ -402,6 +431,45 @@ async function onAccept(txnId) {
   }
 }
 
+async function onHandle(txnId) {
+  try {
+    const rec = await api(`/transaction/${txnId}/handle`, "POST");
+    toast(`${txnId}: ${HANDLED_LABEL[rec.action] || rec.action}.`);
+    await refresh();
+    if (state.tab === "queue" && !(state.queue || []).some((d) => d.transaction_id === txnId)) {
+      closeCard();
+    } else {
+      openCard(txnId);
+    }
+  } catch (e) {
+    toast(String(e.message || e), true);
+  }
+}
+
+function renderHandledItem(h) {
+  const txn = state.txns[h.transaction_id] || {};
+  const li = el("li", "item");
+  li.dataset.id = h.transaction_id;
+
+  const top = el("div", "item-top");
+  top.append(el("span", "item-vendor", h.vendor || txn.counterparty || h.transaction_id));
+  if (txn.amount !== undefined) top.append(el("span", "item-amt", money(txn.amount)));
+  li.append(top);
+
+  const sub = el("div", "item-sub");
+  const left = el("div", "chips");
+  const actionClass = `outcome ${HANDLED_OUTCOME_CLASS[h.action] || ""}`.trim();
+  left.append(el("span", actionClass, HANDLED_LABEL[h.action] || h.action.replace(/_/g, " ")));
+  sub.append(left);
+  const right = el("div", "chips");
+  right.append(el("span", "chip", accountLabel(h.account)));
+  sub.append(right);
+  li.append(sub);
+
+  li.append(el("div", "item-id", h.transaction_id));
+  return li;
+}
+
 async function openTrace(txnId) {
   try {
     const trace = await api(`/trace/${txnId}`);
@@ -441,6 +509,7 @@ function switchTab(tab) {
   state.tab = tab;
   document.getElementById("tab-queue").classList.toggle("active", tab === "queue");
   document.getElementById("tab-posted").classList.toggle("active", tab === "posted");
+  document.getElementById("tab-handled").classList.toggle("active", tab === "handled");
   renderList();
 }
 
@@ -467,6 +536,7 @@ async function runEngine() {
 async function boot() {
   document.getElementById("tab-queue").addEventListener("click", () => switchTab("queue"));
   document.getElementById("tab-posted").addEventListener("click", () => switchTab("posted"));
+  document.getElementById("tab-handled").addEventListener("click", () => switchTab("handled"));
   document.getElementById("run-btn").addEventListener("click", runEngine);
   document.getElementById("trace-close").addEventListener("click", closeTrace);
   try {

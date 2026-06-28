@@ -41,6 +41,11 @@ _OUTCOME_NARRATION: dict[Outcome, str] = {
     Outcome.REQUEST_DOCUMENT: "A material document is missing, so the entrepreneur is asked to provide it.",
 }
 
+_HANDLE_ACTION: dict[Outcome, str] = {
+    Outcome.ANOMALY: "flag_duplicate",
+    Outcome.REQUEST_DOCUMENT: "request_document",
+}
+
 
 class CorrectRequest(BaseModel):
     corrected_account: str | None = None
@@ -55,6 +60,15 @@ class CorrectResponse(BaseModel):
 class ExplainResponse(BaseModel):
     transaction_id: str
     explanation: str
+
+
+class HandledRecord(BaseModel):
+    """What the accountant did with a flagged decision: the next action, logged out of the active queue."""
+
+    transaction_id: str
+    action: str
+    vendor: str
+    account: str
 
 
 def _select_agent() -> AgentProtocol:
@@ -143,6 +157,7 @@ class Console:
         self._customer = customer_id
         self._decisions: dict[str, Decision] = {}
         self._posted: set[str] = set()
+        self._handled: dict[str, HandledRecord] = {}
         self._lock = asyncio.Lock()
 
     @classmethod
@@ -159,7 +174,9 @@ class Console:
         deferred = [
             decision
             for decision in self._decisions.values()
-            if decision.outcome is not Outcome.AUTO_POST and decision.transaction_id not in self._posted
+            if decision.outcome is not Outcome.AUTO_POST
+            and decision.transaction_id not in self._posted
+            and decision.transaction_id not in self._handled
         ]
         amounts = {txn.id: txn.amount for txn in self._repo.transactions(self._customer)}
         rubrieks = {account.number: account.rubriek for account in self._repo.accounts(self._customer)}
@@ -182,6 +199,23 @@ class Console:
             for decision in self._decisions.values()
             if decision.outcome is Outcome.AUTO_POST or decision.transaction_id in self._posted
         ]
+
+    def handle(self, txn_id: str) -> HandledRecord:
+        decision = self.decision(txn_id)
+        action = _HANDLE_ACTION.get(decision.outcome)
+        if action is None:
+            raise HTTPException(
+                status_code=409,
+                detail=f"{txn_id} is {decision.outcome.value}; post it via /accept, not /handle",
+            )
+        record = HandledRecord(
+            transaction_id=txn_id, action=action, vendor=decision.vendor, account=decision.account
+        )
+        self._handled[txn_id] = record
+        return record
+
+    def handled(self) -> list[HandledRecord]:
+        return list(self._handled.values())
 
     async def correct(
         self,
@@ -286,6 +320,12 @@ async def posted() -> list[Decision]:
     return _console.posted()
 
 
+@app.get("/handled")
+async def handled() -> list[HandledRecord]:
+    """Return the handled ledger: anomalies flagged and held, and document requests logged, out of the active queue."""
+    return _console.handled()
+
+
 @app.get("/transaction/{transaction_id}")
 async def get_transaction(transaction_id: str) -> Decision:
     """Return the Decision card for one transaction."""
@@ -296,6 +336,12 @@ async def get_transaction(transaction_id: str) -> Decision:
 async def accept_transaction(transaction_id: str) -> Decision:
     """Accept (post) the agent's decision for one transaction."""
     return _console.accept(transaction_id)
+
+
+@app.post("/transaction/{transaction_id}/handle")
+async def handle_transaction(transaction_id: str) -> HandledRecord:
+    """Record the accountant's next action on a flagged (anomaly / request-document) decision."""
+    return _console.handle(transaction_id)
 
 
 @app.post("/transaction/{transaction_id}/correct")

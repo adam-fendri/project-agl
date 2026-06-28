@@ -10,6 +10,7 @@ from pathlib import Path
 from agl.agent import ClaudeCliAgent, LlmAgent
 from agl.eval import EvalReport, LiftHarness, lift_report
 from agl.models import AgentProtocol, Decision, GroundTruth, Outcome
+from agl.observability import configure_logfire
 from agl.repository import Repository
 
 _DEFAULT_CUSTOMER = "studio-vondel"
@@ -152,6 +153,7 @@ def _summary(report: EvalReport) -> str:
 
 
 async def run(args: argparse.Namespace) -> EvalReport:
+    configure_logfire("agl-eval")
     repo = Repository()
     agent = _build_agent(args.agent, args.model)
     subset = _subset_ids(args.subset, args.limit, repo, args.customer)

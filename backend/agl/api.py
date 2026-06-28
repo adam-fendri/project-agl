@@ -27,6 +27,7 @@ from agl.models import (
     Trace,
     Transaction,
 )
+from agl.observability import configure_logfire
 from agl.repository import Repository
 
 _DEFAULT_CUSTOMER = "studio-vondel"
@@ -370,6 +371,7 @@ class Console:
         return txn
 
 
+configure_logfire()
 app = FastAPI(title="Project AGL", description="Accountant-supervised categorization and reconciliation.")
 _console = Console.create()
 

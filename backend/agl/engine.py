@@ -3,6 +3,8 @@ from __future__ import annotations
 import asyncio
 from decimal import Decimal
 
+import logfire
+
 from agl.grounding import (
     build_evidence,
     counterparty_agrees,
@@ -51,9 +53,10 @@ async def decide(
     No duplicate hint reaches the agent: a duplicate is a cross-transaction fact resolved later from
     the full set of matches, so this pass carries no shared state and assumes no processing order.
     """
-    evidence = build_evidence(txn, repo, txn.customer_id)
-    proposal = await agent.decide(evidence)
-    return evidence, proposal
+    with logfire.span("decide", transaction_id=txn.id):
+        evidence = build_evidence(txn, repo, txn.customer_id)
+        proposal = await agent.decide(evidence)
+        return evidence, proposal
 
 
 def finalize(
@@ -64,8 +67,14 @@ def finalize(
     settled_by: dict[str, list[str]],
 ) -> Decision:
     """Guard the proposal against the full resolved-settlement map, then assemble the Decision."""
-    verdict = run_guard(proposal, txn, repo, settled_by)
-    return _assemble(txn, repo, evidence, proposal, verdict)
+    with logfire.span("finalize", transaction_id=txn.id) as span:
+        verdict = run_guard(proposal, txn, repo, settled_by)
+        decision = _assemble(txn, repo, evidence, proposal, verdict)
+        span.set_attribute("outcome", decision.outcome.value)
+        span.set_attribute("guard_passed", verdict.passed)
+        span.set_attribute("account_confidence", decision.account_confidence.value)
+        span.set_attribute("match_confidence", decision.match_confidence.value)
+        return decision
 
 
 def _failed_decision(txn: Transaction) -> Decision:
@@ -109,22 +118,24 @@ async def run_batch(repo: Repository, agent: AgentProtocol, customer_id: str) ->
                         return txn, None, None
             return txn, None, None
 
-    decided = await asyncio.gather(*(_bounded(txn) for txn in transactions))
+    with logfire.span("run_batch", customer_id=customer_id, n=len(transactions)) as span:
+        decided = await asyncio.gather(*(_bounded(txn) for txn in transactions))
 
-    settled_by: dict[str, list[str]] = {}
-    for txn, _evidence, proposal in decided:
-        if proposal is None:
-            continue
-        for doc_id in proposal.match:
-            settled_by.setdefault(doc_id, []).append(txn.id)
+        settled_by: dict[str, list[str]] = {}
+        for txn, _evidence, proposal in decided:
+            if proposal is None:
+                continue
+            for doc_id in proposal.match:
+                settled_by.setdefault(doc_id, []).append(txn.id)
 
-    decisions: list[Decision] = []
-    for txn, evidence, proposal in decided:
-        if evidence is None or proposal is None:
-            decisions.append(_failed_decision(txn))
-        else:
-            decisions.append(finalize(txn, repo, evidence, proposal, settled_by))
-    return decisions
+        decisions: list[Decision] = []
+        for txn, evidence, proposal in decided:
+            if evidence is None or proposal is None:
+                decisions.append(_failed_decision(txn))
+            else:
+                decisions.append(finalize(txn, repo, evidence, proposal, settled_by))
+        span.set_attribute("failed", sum(1 for _t, e, _p in decided if e is None))
+        return decisions
 
 
 def _assemble(

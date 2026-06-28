@@ -5,6 +5,7 @@ import json
 import os
 import re
 
+import logfire
 from pydantic_ai import Agent
 from pydantic_ai.settings import ModelSettings
 
@@ -121,20 +122,24 @@ class ClaudeCliAgent(AgentProtocol):
 
     async def decide(self, evidence: Evidence) -> Proposal:
         prompt = f"{_SYSTEM_PROMPT}\n\n{render_prompt(evidence)}\n\n{_JSON_INSTRUCTION}"
-        proc = await asyncio.create_subprocess_exec(
-            "claude",
-            "-p",
-            prompt,
-            "--output-format",
-            "json",
-            "--model",
-            self._model,
-            cwd="/tmp",
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-        stdout, stderr = await proc.communicate()
-        if proc.returncode != 0:
-            raise RuntimeError(f"claude -p failed ({proc.returncode}): {stderr.decode()[:400]}")
-        result = json.loads(stdout).get("result", "")
-        return Proposal.model_validate_json(extract_json(result))
+        with logfire.span(
+            "claude_cli.decide", transaction_id=evidence.transaction.id, model=self._model
+        ) as span:
+            proc = await asyncio.create_subprocess_exec(
+                "claude",
+                "-p",
+                prompt,
+                "--output-format",
+                "json",
+                "--model",
+                self._model,
+                cwd="/tmp",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            stdout, stderr = await proc.communicate()
+            if proc.returncode != 0:
+                raise RuntimeError(f"claude -p failed ({proc.returncode}): {stderr.decode()[:400]}")
+            payload = json.loads(stdout)
+            span.set_attribute("usage", payload.get("modelUsage", {}))
+            return Proposal.model_validate_json(extract_json(payload.get("result", "")))

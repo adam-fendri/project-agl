@@ -298,6 +298,7 @@ class Console:
             return updated
 
     def _account(self, number: str, name_en: str, name_nl: str, rubriek: Rubriek) -> Account:
+        balance_sheet = (Rubriek.FIXED_ASSETS_EQUITY, Rubriek.FINANCIAL, Rubriek.FINANCIAL_RESULT)
         return Account(
             number=number,
             customer_id=self._customer,
@@ -305,6 +306,7 @@ class Console:
             name_en=name_en,
             rubriek=rubriek,
             rgs_group="",
+            vat_treatment="exempt" if rubriek in balance_sheet else "standard",
         )
 
     def _new_account(self, body: AssignAccountRequest) -> Account:

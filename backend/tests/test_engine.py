@@ -113,11 +113,11 @@ def test_swap_to_different_same_amount_invoices_is_not_duplicate(repo: Repositor
 
 
 def test_account_unlisted_downgrades_auto_post_to_review(repo: Repository) -> None:
-    unlisted = _UnlistedAgent("T006", "Slack", "4300", account_unlisted=True)
-    listed = _UnlistedAgent("T006", "Slack", "4300", account_unlisted=False)
+    unlisted = _UnlistedAgent("T062", "AWS", "4310", account_unlisted=True)
+    listed = _UnlistedAgent("T062", "AWS", "4310", account_unlisted=False)
 
-    flagged = _decisions(unlisted, repo)["T006"]
-    normal = _decisions(listed, repo)["T006"]
+    flagged = _decisions(unlisted, repo)["T062"]
+    normal = _decisions(listed, repo)["T062"]
 
     assert flagged.account_unlisted is True
     assert flagged.outcome is Outcome.REVIEW
@@ -125,3 +125,23 @@ def test_account_unlisted_downgrades_auto_post_to_review(repo: Repository) -> No
     assert "guard:account_unlisted" in flagged.confidence_signals
     assert normal.account_unlisted is False
     assert normal.outcome is Outcome.AUTO_POST
+
+
+def test_unverified_high_confidence_categorisation_downgrades_to_review(repo: Repository) -> None:
+    agent = _ScriptedAgent(matches={}, accounts={"T006": "4300"})
+
+    decision = _decisions(agent, repo)["T006"]
+
+    assert decision.account_confidence is Confidence.HIGH
+    assert decision.match == []
+    assert decision.outcome is Outcome.REVIEW
+    assert "account_unverified" in decision.confidence_signals
+
+
+def test_bill_verified_categorisation_auto_posts(repo: Repository) -> None:
+    agent = _ScriptedAgent(matches={"T029": ["B-07"]}, accounts={"T029": "4310"})
+
+    decision = _decisions(agent, repo)["T029"]
+
+    assert decision.outcome is Outcome.AUTO_POST
+    assert "account_verified" in decision.confidence_signals

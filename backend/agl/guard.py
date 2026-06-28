@@ -6,8 +6,10 @@ from decimal import Decimal
 from agl.grounding import (
     counterparty_agrees,
     party_of,
+    realised_vat_rate,
     referenced_documents,
     transactions_share_vendor,
+    treatment_rate,
 )
 from agl.models import (
     AnomalyType,
@@ -44,6 +46,7 @@ def run_guard(
     accounts = repo.accounts(txn.customer_id)
     account_numbers = {a.number for a in accounts}
     rubriek_by_number = {a.number: a.rubriek for a in accounts}
+    treatment_by_number = {a.number: a.vat_treatment for a in accounts}
 
     failures: list[str] = []
 
@@ -71,6 +74,12 @@ def run_guard(
             failures.append("amount_ambiguous")
         if _revenue_on_settlement(txn, proposal, rubriek_by_number):
             failures.append("revenue_on_settled_invoice")
+        if _account_contradicts_bill(proposal, bills_by_id):
+            failures.append("account_contradicts_bill")
+        if _vat_inconsistent(
+            proposal, rubriek_by_number, treatment_by_number, invoices_by_id, bills_by_id
+        ):
+            failures.append("vat_inconsistent")
 
         for doc in proposal.match:
             if _claimed_earlier(doc, txn, settled_by, repo):
@@ -151,6 +160,53 @@ def _resolve_document(
     if doc_id.startswith("INV-"):
         return invoices_by_id.get(doc_id)
     return bills_by_id.get(doc_id)
+
+
+def _account_contradicts_bill(proposal: Proposal, bills_by_id: dict[str, Bill]) -> bool:
+    """A settled bill is already booked to a different account than the one the proposal categorises to."""
+    return any(
+        (bill := bills_by_id.get(did)) is not None and bill.account != proposal.account
+        for did in proposal.match
+    )
+
+
+_KNOWN_VAT_RATES = frozenset({0, 9, 21})
+
+
+def _vat_inconsistent(
+    proposal: Proposal,
+    rubriek_by_number: dict[str, Rubriek],
+    treatment_by_number: dict[str, str],
+    invoices_by_id: dict[str, Invoice],
+    bills_by_id: dict[str, Bill],
+) -> bool:
+    """A settled document's realised VAT rate clearly contradicts a cost/revenue account's treatment.
+
+    Scoped to profit-and-loss accounts: settling to a balance-sheet control line (receivable, payable,
+    capitalised asset) is VAT-neutral, so a 21% document under a receivable is never a contradiction.
+    Conservative: it fires only on a clear gap, never on a 0-vs-9 (exempt-vs-reduced) ambiguity, never
+    when net is 0 or the document is absent.
+    """
+    if rubriek_by_number.get(proposal.account) not in (Rubriek.COSTS, Rubriek.REVENUE):
+        return False
+    treatment = treatment_by_number.get(proposal.account)
+    if treatment is None:
+        return False
+    expected = treatment_rate(treatment)
+    for did in proposal.match:
+        doc = _resolve_document(did, invoices_by_id, bills_by_id)
+        if doc is None or doc.net == 0:
+            continue
+        realised = realised_vat_rate(doc)
+        if realised is not None and _vat_clearly_contradicts(realised, expected):
+            return True
+    return False
+
+
+def _vat_clearly_contradicts(realised: int, expected: int) -> bool:
+    if realised not in _KNOWN_VAT_RATES or realised == expected:
+        return False
+    return {realised, expected} != {0, 9}
 
 
 def _amount_ambiguous(

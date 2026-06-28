@@ -73,6 +73,7 @@ class Account(BaseModel):
     name_en: str
     rubriek: Rubriek
     rgs_group: str
+    vat_treatment: str
 
 
 class Transaction(BaseModel):

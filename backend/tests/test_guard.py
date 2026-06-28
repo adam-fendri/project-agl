@@ -231,3 +231,39 @@ def test_monthly_recurring_payment_is_not_a_duplicate(
     verdict = run_guard(proposal, by_id["T070"], repo, {})
 
     assert verdict.passed is True
+
+
+def test_clean_bill_match_passes_new_checks(
+    repo: Repository, by_id: dict[str, Transaction]
+) -> None:
+    proposal = _proposal("AWS", "4310", ["B-07"])
+
+    verdict = run_guard(proposal, by_id["T029"], repo, {})
+
+    assert verdict.passed is True
+    assert "account_contradicts_bill" not in verdict.failed_checks
+    assert "vat_inconsistent" not in verdict.failed_checks
+
+
+def test_account_contradicts_settled_bill_forced_to_review(
+    repo: Repository, by_id: dict[str, Transaction]
+) -> None:
+    proposal = _proposal("AWS", "4300", ["B-07"])
+
+    verdict = run_guard(proposal, by_id["T029"], repo, {})
+
+    assert verdict.passed is False
+    assert verdict.forced_outcome is Outcome.REVIEW
+    assert "account_contradicts_bill" in verdict.failed_checks
+
+
+def test_vat_rate_contradiction_forced_to_review(
+    repo: Repository, by_id: dict[str, Transaction]
+) -> None:
+    proposal = _proposal("AWS", "4600", ["B-07"])
+
+    verdict = run_guard(proposal, by_id["T029"], repo, {})
+
+    assert verdict.passed is False
+    assert verdict.forced_outcome is Outcome.REVIEW
+    assert "vat_inconsistent" in verdict.failed_checks

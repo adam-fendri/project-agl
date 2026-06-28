@@ -3,11 +3,20 @@ from __future__ import annotations
 import asyncio
 from decimal import Decimal
 
-from agl.grounding import build_evidence, counterparty_agrees, party_of, referenced_documents
+from agl.grounding import (
+    build_evidence,
+    counterparty_agrees,
+    party_of,
+    realised_vat_rate,
+    referenced_documents,
+    treatment_rate,
+)
 from agl.guard import run_guard
+from agl.learning import canonical_vendor, vendor_cost_account
 from agl.models import (
     AgentProtocol,
     AnomalyType,
+    Bill,
     Confidence,
     Decision,
     Evidence,
@@ -110,7 +119,7 @@ def _assemble(
         confidence_signals=_confidence_signals(
             txn, repo, evidence, proposal, verdict, match_status
         ),
-        outcome=_route(txn, repo, proposal, verdict),
+        outcome=_route(txn, repo, evidence, proposal, verdict),
         sources=_sources(evidence, proposal),
     )
 
@@ -130,14 +139,68 @@ def _match_status(txn: Transaction, repo: Repository, match: list[str]) -> Match
 
 
 def _route(
-    txn: Transaction, repo: Repository, proposal: Proposal, verdict: GuardVerdict
+    txn: Transaction,
+    repo: Repository,
+    evidence: Evidence,
+    proposal: Proposal,
+    verdict: GuardVerdict,
 ) -> Outcome:
     intended = _intended_outcome(proposal)
     if intended is Outcome.AUTO_POST and _material_uncorroborated(txn, repo, proposal):
         intended = Outcome.REVIEW
+    if intended is Outcome.AUTO_POST and not _categorisation_verified(
+        txn, repo, evidence, proposal
+    ):
+        intended = Outcome.REVIEW
     if verdict.passed or verdict.forced_outcome is None:
         return intended
     return max(intended, verdict.forced_outcome, key=lambda outcome: _SEVERITY[outcome])
+
+
+def _categorisation_verified(
+    txn: Transaction, repo: Repository, evidence: Evidence, proposal: Proposal
+) -> bool:
+    """A fact, not the model's confidence, corroborates the proposed account.
+
+    Any one suffices: the vendor recurs as an established counterparty, a prior correction pins this
+    vendor's cost account, an earlier transaction for the same vendor was booked there, a settling bill
+    is already booked there, or a settled document's realised VAT rate matches the account's treatment.
+    Absent all of these, an auto-post is deferred to review — a wrong categorisation otherwise surfaces
+    only at period-end.
+    """
+    if _recurring_vendor(txn, repo):
+        return True
+    if (
+        vendor_cost_account(canonical_vendor(txn), evidence.corrections, evidence.accounts)
+        == proposal.account
+    ):
+        return True
+    if any(entry.account == proposal.account for entry in evidence.vendor_history):
+        return True
+    for did in proposal.match:
+        doc = repo.document(did)
+        if isinstance(doc, Bill) and doc.account == proposal.account:
+            return True
+    treatment = {a.number: a.vat_treatment for a in evidence.accounts}.get(proposal.account)
+    if treatment is None:
+        return False
+    expected = treatment_rate(treatment)
+    for did in proposal.match:
+        doc = repo.document(did)
+        if doc is None or doc.net == 0:
+            continue
+        if realised_vat_rate(doc) == expected:
+            return True
+    return False
+
+
+def _recurring_vendor(txn: Transaction, repo: Repository) -> bool:
+    """The vendor is an established, recurring counterparty, so a categorisation on a repeat is reliable."""
+    vendor = canonical_vendor(txn)
+    occurrences = sum(
+        1 for other in repo.transactions(txn.customer_id) if canonical_vendor(other) == vendor
+    )
+    return occurrences >= 3
 
 
 def _material_uncorroborated(txn: Transaction, repo: Repository, proposal: Proposal) -> bool:
@@ -184,6 +247,11 @@ def _confidence_signals(
 
     if proposal.account_unlisted:
         signals.append("account_unlisted")
+
+    if _categorisation_verified(txn, repo, evidence, proposal):
+        signals.append("account_verified")
+    else:
+        signals.append("account_unverified")
 
     if proposal.match:
         signals.append(

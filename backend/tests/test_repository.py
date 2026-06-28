@@ -27,6 +27,7 @@ def _new_account(number: str = "4990") -> Account:
         name_en="Design tools",
         rubriek=Rubriek.COSTS,
         rgs_group="",
+        vat_treatment="standard",
     )
 
 

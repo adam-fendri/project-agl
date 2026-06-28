@@ -114,6 +114,21 @@ def party_of(doc: Invoice | Bill) -> str:
     return doc.client if isinstance(doc, Invoice) else doc.supplier
 
 
+_TREATMENT_RATE: dict[str, int] = {"standard": 21, "reduced": 9, "exempt": 0}
+
+
+def realised_vat_rate(doc: Invoice | Bill) -> int | None:
+    """The VAT percentage a document's net and VAT imply (21/9/0), or None when net is 0."""
+    if doc.net == 0:
+        return None
+    return round(doc.vat / doc.net * Decimal(100))
+
+
+def treatment_rate(treatment: str) -> int:
+    """The headline VAT percentage an account's treatment implies: standard 21, reduced 9, exempt 0."""
+    return _TREATMENT_RATE.get(treatment, 21)
+
+
 def _relation(gap: Decimal) -> str:
     if gap == 0:
         return "exact"
@@ -344,9 +359,14 @@ def _render_fact(txn: Transaction, fact: CandidateFact) -> list[str]:
         f"  {_gap_phrase(fact)}; {_direction_note(txn, fact.documents)}; {_counterparty_phrase(txn, fact)}",
     ]
     for doc in fact.documents:
-        lines.append(
-            f"  {doc.id}: {party_of(doc)}, gross {_eur(doc.gross)}, status {doc.status.value}"
-        )
+        parts = [f"  {doc.id}: {party_of(doc)}, gross {_eur(doc.gross)}"]
+        rate = realised_vat_rate(doc)
+        if rate is not None:
+            parts.append(f"VAT {rate}%")
+        if isinstance(doc, Bill):
+            parts.append(f"booked account {doc.account}")
+        parts.append(f"status {doc.status.value}")
+        lines.append(", ".join(parts))
     return lines
 
 

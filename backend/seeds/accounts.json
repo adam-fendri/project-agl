@@ -5,7 +5,8 @@
     "name_nl": "Inventaris",
     "name_en": "Equipment & furniture",
     "rubriek": "0",
-    "rgs_group": "BMva"
+    "rgs_group": "BMva",
+    "vat_treatment": "exempt"
   },
   {
     "number": "0150",
@@ -13,7 +14,8 @@
     "name_nl": "Computers & hardware",
     "name_en": "Computers & hardware",
     "rubriek": "0",
-    "rgs_group": "BMva"
+    "rgs_group": "BMva",
+    "vat_treatment": "exempt"
   },
   {
     "number": "0200",
@@ -21,7 +23,8 @@
     "name_nl": "Afschrijving inventaris",
     "name_en": "Accumulated depreciation",
     "rubriek": "0",
-    "rgs_group": "BMva"
+    "rgs_group": "BMva",
+    "vat_treatment": "exempt"
   },
   {
     "number": "0500",
@@ -29,7 +32,8 @@
     "name_nl": "Eigen vermogen",
     "name_en": "Owner's equity",
     "rubriek": "0",
-    "rgs_group": "BEiv"
+    "rgs_group": "BEiv",
+    "vat_treatment": "exempt"
   },
   {
     "number": "0600",
@@ -37,7 +41,8 @@
     "name_nl": "Privé-opnamen",
     "name_en": "Owner's drawings",
     "rubriek": "0",
-    "rgs_group": "BEiv"
+    "rgs_group": "BEiv",
+    "vat_treatment": "exempt"
   },
   {
     "number": "1100",
@@ -45,7 +50,8 @@
     "name_nl": "Bank — ING zakelijk",
     "name_en": "Business bank account",
     "rubriek": "1",
-    "rgs_group": "BLimBanRba"
+    "rgs_group": "BLimBanRba",
+    "vat_treatment": "exempt"
   },
   {
     "number": "1300",
@@ -53,7 +59,8 @@
     "name_nl": "Debiteuren",
     "name_en": "Accounts receivable",
     "rubriek": "1",
-    "rgs_group": "BVor`"
+    "rgs_group": "BVor`",
+    "vat_treatment": "exempt"
   },
   {
     "number": "1600",
@@ -61,7 +68,8 @@
     "name_nl": "Crediteuren",
     "name_en": "Accounts payable",
     "rubriek": "1",
-    "rgs_group": "BSch`"
+    "rgs_group": "BSch`",
+    "vat_treatment": "exempt"
   },
   {
     "number": "1500",
@@ -69,7 +77,8 @@
     "name_nl": "Te vorderen BTW",
     "name_en": "Input VAT (reclaimable)",
     "rubriek": "1",
-    "rgs_group": "BVor`"
+    "rgs_group": "BVor`",
+    "vat_treatment": "exempt"
   },
   {
     "number": "1510",
@@ -77,7 +86,8 @@
     "name_nl": "Af te dragen BTW",
     "name_en": "Output VAT (payable)",
     "rubriek": "1",
-    "rgs_group": "BSch`"
+    "rgs_group": "BSch`",
+    "vat_treatment": "exempt"
   },
   {
     "number": "1700",
@@ -85,7 +95,8 @@
     "name_nl": "Loonheffingen te betalen",
     "name_en": "Payroll tax payable",
     "rubriek": "1",
-    "rgs_group": "BSch`"
+    "rgs_group": "BSch`",
+    "vat_treatment": "exempt"
   },
   {
     "number": "4000",
@@ -93,7 +104,8 @@
     "name_nl": "Brutolonen",
     "name_en": "Gross wages & salaries",
     "rubriek": "4",
-    "rgs_group": "WPer"
+    "rgs_group": "WPer",
+    "vat_treatment": "exempt"
   },
   {
     "number": "4010",
@@ -101,7 +113,8 @@
     "name_nl": "Sociale lasten",
     "name_en": "Employer social security",
     "rubriek": "4",
-    "rgs_group": "WPer"
+    "rgs_group": "WPer",
+    "vat_treatment": "exempt"
   },
   {
     "number": "4020",
@@ -109,7 +122,8 @@
     "name_nl": "Pensioenlasten",
     "name_en": "Pension contributions",
     "rubriek": "4",
-    "rgs_group": "WPer"
+    "rgs_group": "WPer",
+    "vat_treatment": "exempt"
   },
   {
     "number": "4100",
@@ -117,7 +131,8 @@
     "name_nl": "Inhuur freelancers",
     "name_en": "Freelance / subcontractor",
     "rubriek": "4",
-    "rgs_group": "WPer"
+    "rgs_group": "WPer",
+    "vat_treatment": "standard"
   },
   {
     "number": "4200",
@@ -125,7 +140,8 @@
     "name_nl": "Huur kantoor",
     "name_en": "Office rent",
     "rubriek": "4",
-    "rgs_group": "WBed"
+    "rgs_group": "WBed",
+    "vat_treatment": "standard"
   },
   {
     "number": "4210",
@@ -133,7 +149,8 @@
     "name_nl": "Servicekosten & nuts",
     "name_en": "Service charges & utilities",
     "rubriek": "4",
-    "rgs_group": "WBed"
+    "rgs_group": "WBed",
+    "vat_treatment": "standard"
   },
   {
     "number": "4300",
@@ -141,7 +158,8 @@
     "name_nl": "Software & licenties",
     "name_en": "Software & licenses",
     "rubriek": "4",
-    "rgs_group": "WBed"
+    "rgs_group": "WBed",
+    "vat_treatment": "standard"
   },
   {
     "number": "4310",
@@ -149,7 +167,8 @@
     "name_nl": "Hosting & IT",
     "name_en": "Hosting & IT infrastructure",
     "rubriek": "4",
-    "rgs_group": "WBed"
+    "rgs_group": "WBed",
+    "vat_treatment": "standard"
   },
   {
     "number": "4400",
@@ -157,7 +176,8 @@
     "name_nl": "Marketing & advertenties",
     "name_en": "Marketing & advertising",
     "rubriek": "4",
-    "rgs_group": "WVkf"
+    "rgs_group": "WVkf",
+    "vat_treatment": "standard"
   },
   {
     "number": "4410",
@@ -165,7 +185,8 @@
     "name_nl": "Representatiekosten",
     "name_en": "Representation / client entertainment",
     "rubriek": "4",
-    "rgs_group": "WVkf"
+    "rgs_group": "WVkf",
+    "vat_treatment": "standard"
   },
   {
     "number": "4500",
@@ -173,7 +194,8 @@
     "name_nl": "Kantoorbenodigdheden",
     "name_en": "Office supplies",
     "rubriek": "4",
-    "rgs_group": "WBed"
+    "rgs_group": "WBed",
+    "vat_treatment": "standard"
   },
   {
     "number": "4510",
@@ -181,7 +203,8 @@
     "name_nl": "Telefoon & internet",
     "name_en": "Phone & internet",
     "rubriek": "4",
-    "rgs_group": "WBed"
+    "rgs_group": "WBed",
+    "vat_treatment": "standard"
   },
   {
     "number": "4600",
@@ -189,7 +212,8 @@
     "name_nl": "Reiskosten",
     "name_en": "Travel costs",
     "rubriek": "4",
-    "rgs_group": "WBed"
+    "rgs_group": "WBed",
+    "vat_treatment": "reduced"
   },
   {
     "number": "4700",
@@ -197,7 +221,8 @@
     "name_nl": "Verzekeringen",
     "name_en": "Insurance",
     "rubriek": "4",
-    "rgs_group": "WBed"
+    "rgs_group": "WBed",
+    "vat_treatment": "exempt"
   },
   {
     "number": "4710",
@@ -205,7 +230,8 @@
     "name_nl": "Administratie- & accountantskosten",
     "name_en": "Accounting & admin fees",
     "rubriek": "4",
-    "rgs_group": "WAkf"
+    "rgs_group": "WAkf",
+    "vat_treatment": "standard"
   },
   {
     "number": "4720",
@@ -213,7 +239,8 @@
     "name_nl": "Bankkosten",
     "name_en": "Bank charges",
     "rubriek": "4",
-    "rgs_group": "WBed"
+    "rgs_group": "WBed",
+    "vat_treatment": "exempt"
   },
   {
     "number": "4730",
@@ -221,7 +248,8 @@
     "name_nl": "Abonnementen & contributies",
     "name_en": "Subscriptions & memberships",
     "rubriek": "4",
-    "rgs_group": "WBed"
+    "rgs_group": "WBed",
+    "vat_treatment": "standard"
   },
   {
     "number": "4800",
@@ -229,7 +257,8 @@
     "name_nl": "Afschrijvingskosten",
     "name_en": "Depreciation expense",
     "rubriek": "4",
-    "rgs_group": "WAfs"
+    "rgs_group": "WAfs",
+    "vat_treatment": "exempt"
   },
   {
     "number": "4900",
@@ -237,7 +266,8 @@
     "name_nl": "Overige kosten",
     "name_en": "Miscellaneous / other costs",
     "rubriek": "4",
-    "rgs_group": "WBed"
+    "rgs_group": "WBed",
+    "vat_treatment": "standard"
   },
   {
     "number": "8000",
@@ -245,7 +275,8 @@
     "name_nl": "Omzet ontwerp & development",
     "name_en": "Design & dev service revenue",
     "rubriek": "8",
-    "rgs_group": "WOmz"
+    "rgs_group": "WOmz",
+    "vat_treatment": "standard"
   },
   {
     "number": "8010",
@@ -253,7 +284,8 @@
     "name_nl": "Omzet consultancy",
     "name_en": "Consultancy revenue",
     "rubriek": "8",
-    "rgs_group": "WOmz"
+    "rgs_group": "WOmz",
+    "vat_treatment": "standard"
   },
   {
     "number": "8100",
@@ -261,7 +293,8 @@
     "name_nl": "Overige opbrengsten",
     "name_en": "Other income",
     "rubriek": "8",
-    "rgs_group": "WOvb"
+    "rgs_group": "WOvb",
+    "vat_treatment": "standard"
   },
   {
     "number": "9000",
@@ -269,7 +302,8 @@
     "name_nl": "Rentebaten & -lasten",
     "name_en": "Interest income / expense",
     "rubriek": "9",
-    "rgs_group": "WFbe"
+    "rgs_group": "WFbe",
+    "vat_treatment": "exempt"
   },
   {
     "number": "9100",
@@ -277,6 +311,7 @@
     "name_nl": "Koersverschillen",
     "name_en": "FX differences",
     "rubriek": "9",
-    "rgs_group": "WFbe"
+    "rgs_group": "WFbe",
+    "vat_treatment": "exempt"
   }
 ]

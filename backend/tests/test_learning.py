@@ -37,6 +37,7 @@ def _software_account() -> Account:
         name_en="Software",
         rubriek=Rubriek.COSTS,
         rgs_group="WBedAandKnt",
+        vat_treatment="standard",
     )
 
 

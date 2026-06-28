@@ -153,6 +153,21 @@ def harden(tid: str, counterparty: str, description: str, ttype: TransactionType
     return name, (remi or f"REF {eref}")
 
 
+_VAT_EXEMPT_COSTS = frozenset({"4000", "4010", "4020", "4700", "4720", "4800"})
+_VAT_REDUCED_COSTS = frozenset({"4600"})
+_FOOD_CATERING = re.compile(r"\b(food|catering|horeca|lunch|maaltijd|diner|eten)\b", re.IGNORECASE)
+
+
+def vat_treatment(number: str, name: str) -> str:
+    """The standard Dutch VAT treatment for a chart account: exempt for balance-sheet, financial, and
+    VAT-free cost lines; reduced for travel and food/catering; standard otherwise (the default)."""
+    if number[0] in {"0", "1", "9"} or number in _VAT_EXEMPT_COSTS:
+        return "exempt"
+    if number in _VAT_REDUCED_COSTS or _FOOD_CATERING.search(name):
+        return "reduced"
+    return "standard"
+
+
 def parse_accounts() -> list[Account]:
     text = (SOURCE / "chart_of_accounts.md").read_text()
     out: list[Account] = []
@@ -166,6 +181,7 @@ def parse_accounts() -> list[Account]:
                 name_en=row[2],
                 rubriek=nr[0],  # type: ignore[arg-type] - validated by the enum
                 rgs_group=row[3].strip("`").replace("~", "").strip(),
+                vat_treatment=vat_treatment(nr, f"{row[1]} {row[2]}"),
             )
         )
     return out

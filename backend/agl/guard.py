@@ -201,15 +201,23 @@ def _correction_conflict(
     corrections: list[Correction],
     rubriek_by_number: dict[str, Rubriek],
 ) -> bool:
+    """A conflict only when the proposal contradicts the MOST RECENT correction for the vendor.
+
+    A re-correction supersedes its predecessor, so the guard resolves the latest matching cost
+    correction and never flags a decision against an account the accountant has already overruled.
+    """
+    effective: Correction | None = None
     for c in corrections:
         account = c.corrected_account
         if not c.vendor or account is None:
             continue
         if rubriek_by_number.get(account) is not Rubriek.COSTS:
             continue
-        if _vendor_matches(c.vendor, proposal.vendor) and proposal.account != account:
-            return True
-    return False
+        if not _vendor_matches(c.vendor, proposal.vendor):
+            continue
+        if effective is None or c.created_at > effective.created_at:
+            effective = c
+    return effective is not None and proposal.account != effective.corrected_account
 
 
 def _vendor_matches(correction_vendor: str, proposal_vendor: str) -> bool:

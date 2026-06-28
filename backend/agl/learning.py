@@ -65,15 +65,18 @@ def vendor_cost_account(
     if not target:
         return None
     rubriek_by_number = {account.number: account.rubriek for account in accounts}
+    effective: Correction | None = None
     for correction in corrections:
         account = correction.corrected_account
         if not correction.vendor.strip() or account is None:
             continue
         if rubriek_by_number.get(account) is not Rubriek.COSTS:
             continue
-        if _distinctive(correction.vendor) == target:
-            return account
-    return None
+        if _distinctive(correction.vendor) != target:
+            continue
+        if effective is None or correction.created_at > effective.created_at:
+            effective = correction
+    return effective.corrected_account if effective is not None else None
 
 
 def apply_correction(

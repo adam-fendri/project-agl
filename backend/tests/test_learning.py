@@ -65,6 +65,14 @@ def _correction(vendor: str, account: str) -> Correction:
     )
 
 
+def _correction_at(vendor: str, account: str, created_at: datetime) -> Correction:
+    return _correction(vendor, account).model_copy(update={"created_at": created_at})
+
+
+def _costs_account(number: str) -> Account:
+    return _software_account().model_copy(update={"number": number})
+
+
 def _decision(transaction_id: str, vendor: str, account: str) -> Decision:
     return Decision(
         transaction_id=transaction_id,
@@ -101,6 +109,15 @@ def test_vendor_cost_account_selects_the_corrected_cost_account() -> None:
     assert account == "4300"
 
 
+def test_vendor_cost_account_prefers_the_most_recent_correction() -> None:
+    accounts = [_costs_account("4300"), _costs_account("4500")]
+    older = _correction_at("Figma", "4300", datetime(2026, 1, 1))
+    newer = _correction_at("Figma", "4500", datetime(2026, 2, 1))
+
+    assert vendor_cost_account("Figma", [older, newer], accounts) == "4500"
+    assert vendor_cost_account("Figma", [newer, older], accounts) == "4500"
+
+
 def test_apply_correction_writes_runtime_store_not_seed(tmp_path: Path) -> None:
     seed_before = json.loads((SEEDS / "corrections.json").read_text())
     repo = _runtime_repo(tmp_path)
@@ -124,6 +141,23 @@ def test_apply_correction_dedupes(tmp_path: Path) -> None:
 
     assert first.id == second.id
     assert len(json.loads((tmp_path / "corrections.json").read_text())) == 1
+
+
+def test_apply_correction_most_recent_account_wins(tmp_path: Path) -> None:
+    repo = _runtime_repo(tmp_path)
+    rubriek = {a.number: a.rubriek for a in repo.accounts(CUSTOMER)}
+    assert rubriek.get("4300") is Rubriek.COSTS
+    assert rubriek.get("4500") is Rubriek.COSTS
+
+    apply_correction(repo, "T004", "4300", None, vendor="Figma")
+    apply_correction(repo.reload(), "T004", "4500", None, vendor="Figma")
+
+    reloaded = repo.reload()
+    effective = vendor_cost_account(
+        "Figma", reloaded.corrections(CUSTOMER), reloaded.accounts(CUSTOMER)
+    )
+    assert effective == "4500"
+    assert len(reloaded.store.load()) == 2
 
 
 def test_apply_correction_rejects_unknown_account(tmp_path: Path) -> None:

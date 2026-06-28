@@ -235,7 +235,7 @@
     "transaction_id": "T036",
     "account": "4500",
     "match": [],
-    "outcome": "auto_post"
+    "outcome": "review"
   },
   {
     "transaction_id": "T037",
@@ -317,11 +317,11 @@
     "transaction_id": "T048",
     "account": "4900",
     "match": [],
-    "outcome": "auto_post"
+    "outcome": "review"
   },
   {
     "transaction_id": "T049",
-    "account": "0150",
+    "account": "0100",
     "match": [],
     "outcome": "request_document"
   },
@@ -495,7 +495,7 @@
     "match": [
       "B-20"
     ],
-    "outcome": "review"
+    "outcome": "auto_post"
   },
   {
     "transaction_id": "T076",
@@ -534,13 +534,13 @@
     "transaction_id": "T081",
     "account": "4900",
     "match": [],
-    "outcome": "auto_post"
+    "outcome": "review"
   },
   {
     "transaction_id": "T082",
     "account": "4500",
     "match": [],
-    "outcome": "auto_post"
+    "outcome": "review"
   },
   {
     "transaction_id": "T083",

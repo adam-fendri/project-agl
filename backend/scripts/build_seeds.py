@@ -351,8 +351,8 @@ def verify(
     by_outcome = {o: 0 for o in Outcome}
     for gt in truth:
         by_outcome[gt.outcome] += 1
-    assert by_outcome[Outcome.AUTO_POST] == 84, by_outcome
-    assert by_outcome[Outcome.REVIEW] == 13, by_outcome
+    assert by_outcome[Outcome.AUTO_POST] == 81, by_outcome
+    assert by_outcome[Outcome.REVIEW] == 16, by_outcome
     assert by_outcome[Outcome.ANOMALY] == 1, by_outcome
     assert by_outcome[Outcome.REQUEST_DOCUMENT] == 2, by_outcome
 

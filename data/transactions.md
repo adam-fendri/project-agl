@@ -58,7 +58,7 @@ books to 8000 (revenue lives off the feed, at invoicing). See DECISIONS D11.
 | T033 | 02-04 | -2.662,00 | Amac Apple Premium Reseller | iDEAL MacBook Pro 14 M4 | 0150 | B-15 | REVIEW |
 | T034 | 02-04 | -96,80 | Slack Technologies | SEPA Incasso SLACK | 4300 | - | AUTO |
 | T035 | 02-05 | -169,40 | KPN | SEPA Incasso internet/telefoon feb | 4510 | - | AUTO |
-| T036 | 02-06 | -41,20 | Albert Heijn 1342 | BEA Betaalpas 06-02 kantine | 4500 | - | AUTO |
+| T036 | 02-06 | -41,20 | Albert Heijn 1342 | BEA Betaalpas 06-02 kantine | 4500 | - | REVIEW |
 | T037 | 02-09 | -210,00 | Vimeo Inc | SEPA Incasso VIMEO PRO jaar | 4300 | - | AUTO |
 | T038 | 02-10 | -27,50 | NS Groep | BEA Betaalpas trein 10-02 Pas003 | 4600 | - | AUTO |
 | T039 | 02-12 | +4.235,00 | Mendo | SEPA Overboeking INV-2026-003 | 1300 | INV-2026-003 | AUTO |
@@ -70,8 +70,8 @@ books to 8000 (revenue lives off the feed, at invoicing). See DECISIONS D11.
 | T045 | 02-18 | +5.072,00 | Brightseed B.V. | SEPA Overboeking INV-2026-002 | 1300 | INV-2026-002 | REVIEW |
 | T046 | 02-19 | -7.865,00 | Studio Pixel | SEPA Overboeking factuur SP-2026-018 | 4100 | B-11? | ANOMALY |
 | T047 | 02-20 | -240,00 | NS Groep Zakelijk | SEPA Incasso NS Business Card feb | 4600 | B-16 | AUTO |
-| T048 | 02-23 | -34,99 | Spotify | SEPA Incasso SPOTIFY studio | 4900 | - | AUTO |
-| T049 | 02-24 | -4.500,00 | Bouwbedrijf de Groot B.V. | SEPA Overboeking aanbetaling verbouwing | 0150 | - | REQUEST |
+| T048 | 02-23 | -34,99 | Spotify | SEPA Incasso SPOTIFY studio | 4900 | - | REVIEW |
+| T049 | 02-24 | -4.500,00 | Bouwbedrijf de Groot B.V. | SEPA Overboeking aanbetaling verbouwing | 0100 | - | REQUEST |
 | T050 | 02-25 | -3.300,00 | T. Bakker | SEPA Overboeking salaris feb 2026 | 4000 | - | AUTO |
 | T051 | 02-25 | -3.600,00 | S. de Wit | SEPA Overboeking salaris feb 2026 | 4000 | - | AUTO |
 | T052 | 02-25 | -3.350,00 | L. Jansen | SEPA Overboeking salaris feb 2026 | 4000 | - | AUTO |
@@ -102,14 +102,14 @@ books to 8000 (revenue lives off the feed, at invoicing). See DECISIONS D11.
 | T072 | 03-06 | +7.260,00 | Voss & Partners | SEPA Overboeking INV-2026-004 | 1300 | INV-2026-004 | REVIEW |
 | T073 | 03-06 | -2.178,00 | M. Hendriks | SEPA Overboeking factuur MH26-7 tekst | 4100 | B-13 | AUTO |
 | T074 | 03-09 | +7.260,00 | Lumen Retail B.V. | SEPA Overboeking betaling | 1300 | INV-2026-005 | REVIEW |
-| T075 | 03-10 | -459,80 | Coolblue Zakelijk | iDEAL Dell UltraSharp 27 | 4500 | B-20 | REVIEW |
+| T075 | 03-10 | -459,80 | Coolblue Zakelijk | iDEAL Dell UltraSharp 27 | 4500 | B-20 | AUTO |
 | T076 | 03-11 | +3.375,90 | Kasa Tech B.V. | SEPA Overboeking facturen feb | 1300 | INV-2026-006+007 | REVIEW |
 | T077 | 03-12 | -39,00 | Typeform | SEPA Incasso TYPEFORM basic | 4300 | - | AUTO |
 | T078 | 03-13 | -88,00 | Hotel Casa Amsterdam | BEA Betaalpas 13-03 overnachting | 4600 | - | AUTO |
 | T079 | 03-16 | -1.000,00 | T. Bakker | SEPA Overboeking (geen omschrijving) | 0600 | - | REVIEW |
 | T080 | 03-17 | -132,00 | PostNL | SEPA Incasso verzendingen feb | 4900 | - | AUTO |
-| T081 | 03-18 | -210,00 | KvK | SEPA Incasso handelsregister | 4900 | - | AUTO |
-| T082 | 03-19 | -67,50 | Picnic | iDEAL kantoor lunch team | 4500 | - | AUTO |
+| T081 | 03-18 | -210,00 | KvK | SEPA Incasso handelsregister | 4900 | - | REVIEW |
+| T082 | 03-19 | -67,50 | Picnic | iDEAL kantoor lunch team | 4500 | - | REVIEW |
 | T083 | 03-20 | -445,00 | Drukkerij Tielen | iDEAL drukwerk portfolio | 4400 | - | AUTO |
 | T084 | 03-23 | -1.815,00 | Webflow Inc | SEPA Incasso WEBFLOW enterprise jr | 4300 | - | AUTO |
 | T085 | 03-24 | -29,00 | Notion Labs | SEPA Incasso NOTION team | 4300 | - | AUTO |
@@ -131,12 +131,12 @@ books to 8000 (revenue lives off the feed, at invoicing). See DECISIONS D11.
 
 ## Tally
 
-- **AUTO** (confident, auto-post): 84
-- **REVIEW** (uncertain, queue): 13 -> T010, T016, T030, T033, T042, T043, T045, T068, T072, T074, T075, T076, T079
+- **AUTO** (confident, auto-post): 81
+- **REVIEW** (uncertain, queue): 16 -> T010, T016, T030, T033, T036, T042, T043, T045, T048, T068, T072, T074, T076, T079, T081, T082
 - **ANOMALY**: 1 -> T046
 - **REQUEST_DOCUMENT** (missing counterpart, ask the entrepreneur for the document): 2 -> T049, T096
 
-84 + 13 + 1 + 2 = 100. Confident rate = 84% on this DELIBERATELY-HARD set.
+81 + 16 + 1 + 2 = 100. Confident rate = 81% on this DELIBERATELY-HARD set.
 90%+ is the PRODUCTION target reached as the correction loop learns the customer's
 conventions (the demo shows the mechanism, not a rigged 90% on synthetic data).
 
@@ -147,18 +147,29 @@ conventions (the demo shows the mechanism, not a rigged 90% on synthetic data).
 - **T016 / T079** `T. Bakker` round transfers, no omschrijving: owner's draw (`0600`,
   NOT an expense) and must be told apart from his salary (T019/T050/T086 -> `4000`).
 - **T030** LinkedIn premium: subscription (`4730`) vs marketing (`4400`).
-- **T033 / T075** MacBook & monitor: capitalize as asset (`0150`) vs expense as
-  supplies (`4500`). Threshold judgment.
+- **T033** MacBook (EUR2.662, net ~EUR2.200): capitalize as asset (`0150`) vs expense as
+  supplies (`4500`). Threshold judgment. (T075 Dell monitor EUR459,80 = ~EUR380 net is
+  BELOW the ~EUR450 line -> clear immediate expense `4500`, so it auto-posts; no longer a
+  threshold judgment.)
+- **T036 / T082** Albert Heijn `kantine` & Picnic `kantoor lunch team`: staff catering /
+  team lunch. This chart has NO staff-catering line -> `4410` Representatie is *client*
+  entertainment, `4500` office supplies is not food, `4900` is the catch-all. No account
+  truly fits, so the agent must DEFER to review rather than force-fit; GT `4500` is provisional.
 - **T043** `J. de Vries` SEPA transfer that looks exactly like the 7 salary lines but
   is a freelancer (`4100`, has bill B-12).
 - **T045** Brightseed pays EUR5.072 against the EUR5.082 invoice: match with a EUR10
   tolerance or flag the short-pay?
 - **T046** Studio Pixel paid a SECOND time (identical to T040) -> duplicate payment,
   the headline anomaly. Bill B-11 was already settled.
+- **T048 / T081** Spotify & KvK `handelsregister` fee: judgment-call defers. Spotify reads
+  as a `4730` subscription or `4300` software yet may be ambient/private; the KvK
+  Chamber-of-Commerce levy sits between `4730` contributies and `4900` overige kosten.
+  Genuinely uncertain -> review; GT `4900` for both.
 - **T049** EUR4.500 to a builder with NO bill on file -> missing counterpart. This is a
   MATERIAL document gap, so the outcome is `REQUEST_DOCUMENT` (ask the entrepreneur for the
   bill), distinct from a low-stakes missing-counterpart that merely defers to REVIEW. (GT
-  acct `0150` is provisional, pending the requested invoice.)
+  acct `0100` Inventaris is provisional, pending the requested invoice; a building
+  renovation is a tangible fixed asset, NOT `0150` Computers & hardware.)
 - **T068** `GOOGLE *ADS` (`4400`) vs the GOOGLE Workspace charge T005 (`4300`): same
   vendor root, two accounts. Naive vendor-mapping fails.
 - **T072 / T074** two separate EUR7.260 inflows -> which clears INV-004 vs INV-005?

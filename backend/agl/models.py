@@ -33,11 +33,6 @@ class DocumentStatus(str, Enum):
     PAID = "paid"
 
 
-class RuleScope(str, Enum):
-    VENDOR = "vendor"
-    PATTERN = "pattern"
-
-
 class AnomalyType(str, Enum):
     DUPLICATE = "duplicate"
     MISSING_COUNTERPART = "missing_counterpart"
@@ -133,17 +128,6 @@ class Correction(BaseModel):
     corrected_account: str | None = None
     corrected_match: str | None = None
     note: str = ""
-    created_at: datetime
-
-
-class Rule(BaseModel):
-    model_config = ConfigDict(frozen=True, extra="forbid")
-
-    customer_id: str
-    key: str
-    scope: RuleScope
-    account: str
-    source_correction_id: str
     created_at: datetime
 
 

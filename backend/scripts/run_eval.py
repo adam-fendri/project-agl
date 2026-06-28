@@ -139,8 +139,8 @@ def _summary(report: EvalReport) -> str:
     return "\n".join(
         [
             f"categorization_accuracy : {report.categorization_accuracy:.3f}",
-            f"match_accuracy          : {report.match_accuracy:.3f}",
-            f"reconciliation_accuracy : {report.reconciliation_accuracy:.3f}",
+            f"reconciliation_accuracy : {report.reconciliation_accuracy:.3f}  (documents only — the honest reconciliation metric)",
+            f"match_decision_accuracy : {report.match_accuracy:.3f}  (all rows incl. correctly-empty; runs high)",
             f"false_confidence_count  : {report.false_confidence_count}",
             f"false_confidence (cat / recon) : {report.false_confidence_categorization} / {report.false_confidence_reconciliation}",
             f"routing                 : {report.counts}",

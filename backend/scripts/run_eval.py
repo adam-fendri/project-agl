@@ -108,6 +108,7 @@ def _summary(report: EvalReport) -> str:
             f"categorization_accuracy : {report.categorization_accuracy:.3f}",
             f"match_accuracy          : {report.match_accuracy:.3f}",
             f"false_confidence_count  : {report.false_confidence_count}",
+            f"false_confidence (cat / recon) : {report.false_confidence_categorization} / {report.false_confidence_reconciliation}",
             f"routing                 : {report.counts}",
             "gates:",
             *gate_lines,

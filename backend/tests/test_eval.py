@@ -136,3 +136,35 @@ def test_lift_report_without_eligible_rows_leaves_lift_unset() -> None:
     assert report.eligible_count == 0
     assert report.lift is None
     assert report.cold_categorization_accuracy == report.categorization_accuracy
+
+
+def test_false_confidence_is_split_per_task_and_only_counts_auto_posts() -> None:
+    repo = Repository()
+    truth = repo.ground_truth()
+    tid = "T001"
+    right_account = truth[tid].account
+    right_match = truth[tid].match
+    wrong_account = "9999"
+    wrong_match = ["__no_such_document__"]
+    assert wrong_account != right_account
+    assert set(wrong_match) != set(right_match)
+
+    wrong_cat = run_eval([_decision(tid, wrong_account, right_match, Outcome.AUTO_POST)], repo)
+    assert wrong_cat.false_confidence_categorization == 1
+    assert wrong_cat.false_confidence_reconciliation == 0
+
+    wrong_recon = run_eval([_decision(tid, right_account, wrong_match, Outcome.AUTO_POST)], repo)
+    assert wrong_recon.false_confidence_categorization == 0
+    assert wrong_recon.false_confidence_reconciliation == 1
+
+    both_wrong = run_eval([_decision(tid, wrong_account, wrong_match, Outcome.AUTO_POST)], repo)
+    assert both_wrong.false_confidence_categorization == 1
+    assert both_wrong.false_confidence_reconciliation == 1
+
+    fully_correct = run_eval([_decision(tid, right_account, right_match, Outcome.AUTO_POST)], repo)
+    assert fully_correct.false_confidence_categorization == 0
+    assert fully_correct.false_confidence_reconciliation == 0
+
+    wrong_review = run_eval([_decision(tid, wrong_account, wrong_match, Outcome.REVIEW)], repo)
+    assert wrong_review.false_confidence_categorization == 0
+    assert wrong_review.false_confidence_reconciliation == 0

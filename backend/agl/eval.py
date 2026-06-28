@@ -40,6 +40,8 @@ class EvalReport(BaseModel):
     categorization_accuracy: float
     match_accuracy: float
     false_confidence_count: int
+    false_confidence_categorization: int = 0
+    false_confidence_reconciliation: int = 0
     counts: dict[str, int] = Field(default_factory=dict)
     gates: dict[str, GateScore] = Field(default_factory=dict)
     cold_categorization_accuracy: float | None = None
@@ -105,6 +107,16 @@ def run_eval(decisions: list[Decision], repo: Repository) -> EvalReport:
         for d, g in scored
         if d.outcome is Outcome.AUTO_POST and not _fully_correct(d, g)
     )
+    false_confidence_categorization = sum(
+        1
+        for d, g in scored
+        if d.outcome is Outcome.AUTO_POST and not _account_correct(d, g)
+    )
+    false_confidence_reconciliation = sum(
+        1
+        for d, g in scored
+        if d.outcome is Outcome.AUTO_POST and not _match_correct(d, g)
+    )
 
     routed: dict[Outcome, int] = {outcome: 0 for outcome in Outcome}
     for d, _ in scored:
@@ -121,6 +133,8 @@ def run_eval(decisions: list[Decision], repo: Repository) -> EvalReport:
         "request_document": routed[Outcome.REQUEST_DOCUMENT],
         "categorization_correct": account_correct,
         "match_correct": match_correct,
+        "false_confidence_categorization": false_confidence_categorization,
+        "false_confidence_reconciliation": false_confidence_reconciliation,
         "anomalies_expected": anomaly_gate.expected,
         "anomalies_caught": anomaly_gate.correct,
         "anomaly_false_positives": anomaly_gate.predicted - anomaly_gate.correct,
@@ -130,6 +144,8 @@ def run_eval(decisions: list[Decision], repo: Repository) -> EvalReport:
         categorization_accuracy=_ratio(account_correct, len(scored)),
         match_accuracy=_ratio(match_correct, len(scored)),
         false_confidence_count=false_confidence,
+        false_confidence_categorization=false_confidence_categorization,
+        false_confidence_reconciliation=false_confidence_reconciliation,
         counts=counts,
         gates=gates,
     )

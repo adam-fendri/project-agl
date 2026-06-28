@@ -154,7 +154,6 @@ class Console:
         async with self._lock:
             decisions = await run_batch(self._repo, self._agent, self._customer)
             self._decisions = {decision.transaction_id: decision for decision in decisions}
-            self._posted.clear()
             return decisions
 
     def queue(self) -> list[Decision]:

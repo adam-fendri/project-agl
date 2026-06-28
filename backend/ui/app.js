@@ -24,6 +24,19 @@ const NEXT_ACTION = {
   unusual_amount: "Confirm the amount with the entrepreneur; it is outside this vendor's normal range.",
 };
 
+const FLAG_ACTION = {
+  duplicate: "Flag duplicate",
+  missing_counterpart: "Request counterpart",
+  suspicious_vendor: "Escalate vendor",
+  unusual_amount: "Confirm amount",
+};
+
+function blockedActionLabel(d) {
+  if (d.outcome === "request_document") return "Request document";
+  if (d.anomaly && FLAG_ACTION[d.anomaly.type]) return FLAG_ACTION[d.anomaly.type];
+  return "Resolve before posting";
+}
+
 async function api(path, method = "GET", body) {
   const opts = { method, headers: { "Content-Type": "application/json" } };
   if (body !== undefined) opts.body = JSON.stringify(body);
@@ -133,12 +146,30 @@ function renderList() {
     : "Auto-posted plus accepted entries. Spot-check before sign-off.";
   const source = listSource();
   if (source.length === 0) {
-    ul.append(el("li", "empty", state.tab === "queue" ? "Queue is clear." : "Nothing posted yet."));
+    ul.append(renderEmptyState());
     return;
   }
   for (const d of source) {
     ul.append(renderItem(d));
   }
+}
+
+function engineHasRun() {
+  return (state.queue || []).length > 0 || (state.posted || []).length > 0;
+}
+
+function renderEmptyState() {
+  const li = el("li", "empty");
+  if (engineHasRun()) {
+    li.textContent = state.tab === "queue" ? "Queue is clear." : "Nothing posted yet.";
+    return li;
+  }
+  li.append(el("div", null, "No decisions yet. Run the engine to categorize and reconcile the transactions."));
+  const btn = el("button", "btn btn-run", "Run engine");
+  btn.style.marginTop = "14px";
+  btn.addEventListener("click", runEngine);
+  li.append(btn);
+  return li;
 }
 
 function renderItem(d) {
@@ -256,16 +287,25 @@ function openCard(txnId) {
 
 function renderActions(txnId, d) {
   const wrap = el("div");
+  const postable = d.outcome === "auto_post" || d.outcome === "review";
   const isPosted = d.outcome === "auto_post" || (state.posted || []).some((p) => p.transaction_id === txnId);
 
   const actions = el("div", "actions");
-  const acceptBtn = el("button", "btn btn-accept", isPosted ? "Posted ✓" : "Accept & post");
-  acceptBtn.disabled = isPosted;
-  acceptBtn.addEventListener("click", () => onAccept(txnId));
+  if (postable) {
+    const acceptBtn = el("button", "btn btn-accept", isPosted ? "Posted ✓" : "Accept & post");
+    acceptBtn.disabled = isPosted;
+    acceptBtn.addEventListener("click", () => onAccept(txnId));
+    actions.append(acceptBtn);
+  } else {
+    const blockedBtn = el("button", "btn btn-accept", blockedActionLabel(d));
+    blockedBtn.disabled = true;
+    blockedBtn.title = "Resolve this flag before the entry can be posted.";
+    actions.append(blockedBtn);
+  }
 
   const correctBtn = el("button", "btn btn-correct", "Correct");
   const explainBtn = el("button", "btn", "Explain");
-  actions.append(acceptBtn, correctBtn, explainBtn);
+  actions.append(correctBtn, explainBtn);
   wrap.append(actions);
 
   const correctPanel = renderCorrectPanel(txnId, d);
@@ -405,6 +445,9 @@ function switchTab(tab) {
 }
 
 async function runEngine() {
+  if (!confirm("Run the engine over all transactions? This makes ~100 LLM calls and can take a while. Posted entries are kept.")) {
+    return;
+  }
   const btn = document.getElementById("run-btn");
   btn.disabled = true;
   btn.textContent = "Running…";
@@ -428,7 +471,6 @@ async function boot() {
   document.getElementById("trace-close").addEventListener("click", closeTrace);
   try {
     await loadStatics();
-    await api("/run", "POST");
     await refresh();
   } catch (e) {
     toast(String(e.message || e), true);

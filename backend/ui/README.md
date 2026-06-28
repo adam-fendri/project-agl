@@ -34,9 +34,10 @@ From `backend/`:
 .venv/bin/uvicorn agl.api:app --port 8137
 ```
 
-Then open <http://127.0.0.1:8137/>. The page runs the engine on load (`POST /run`),
-populates the queue, and is immediately demo-able. Use the **Run engine** button to
-re-run.
+Then open <http://127.0.0.1:8137/>. The page loads the current state (`GET /queue`,
+`/posted`, `/metrics`) without running anything; on a fresh server it shows an empty
+state with a **Run engine** button. Click **Run engine** (it confirms first, since it
+is ~100 LLM calls) to categorize the transactions. Posted entries survive a re-run.
 
 To drive it against a hosted model instead of the local CLI, set an API key and
 `AGL_AGENT=llm` (Claude via `ANTHROPIC_API_KEY`, or Gemini; see `agl/api.py:_select_agent`):
@@ -51,7 +52,8 @@ The page is a thin client over the live API — no business logic lives in the U
 
 | UI action            | Endpoint |
 |----------------------|----------|
-| load / Run engine    | `POST /run` |
+| load (current state) | `GET /queue`, `GET /posted`, `GET /metrics` |
+| Run engine           | `POST /run` |
 | queue                | `GET /queue` |
 | auto-posted          | `GET /posted` |
 | metrics bar          | `GET /metrics` |

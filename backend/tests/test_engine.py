@@ -5,7 +5,7 @@ import asyncio
 import pytest
 
 from agl.engine import run_batch
-from agl.models import Confidence, Decision, Evidence, Outcome, Proposal
+from agl.models import AgentProtocol, Confidence, Decision, Evidence, Outcome, Proposal
 from agl.repository import Repository
 
 CUSTOMER = "studio-vondel"
@@ -47,7 +47,40 @@ class _ScriptedAgent:
         )
 
 
-def _decisions(agent: _ScriptedAgent, repo: Repository) -> dict[str, Decision]:
+class _UnlistedAgent:
+    """A no-LLM agent: one HIGH/HIGH documentless proposal for the target, account_unlisted toggled, others abstain."""
+
+    def __init__(self, target: str, vendor: str, account: str, account_unlisted: bool) -> None:
+        self._target = target
+        self._vendor = vendor
+        self._account = account
+        self._account_unlisted = account_unlisted
+
+    async def decide(self, evidence: Evidence) -> Proposal:
+        txn = evidence.transaction
+        if txn.id == self._target:
+            return Proposal(
+                vendor=self._vendor,
+                account=self._account,
+                account_reasoning="scripted",
+                account_confidence=Confidence.HIGH,
+                account_unlisted=self._account_unlisted,
+                match=[],
+                match_reasoning=None,
+                match_confidence=Confidence.HIGH,
+            )
+        return Proposal(
+            vendor=txn.counterparty,
+            account=evidence.accounts[0].number,
+            account_reasoning="scripted",
+            account_confidence=Confidence.LOW,
+            match=[],
+            match_reasoning=None,
+            match_confidence=Confidence.LOW,
+        )
+
+
+def _decisions(agent: AgentProtocol, repo: Repository) -> dict[str, Decision]:
     return {d.transaction_id: d for d in asyncio.run(run_batch(repo, agent, CUSTOMER))}
 
 
@@ -77,3 +110,18 @@ def test_swap_to_different_same_amount_invoices_is_not_duplicate(repo: Repositor
     for tid in ("T072", "T074"):
         signals = decisions[tid].confidence_signals
         assert not any(s.startswith("guard:duplicate:") for s in signals)
+
+
+def test_account_unlisted_downgrades_auto_post_to_review(repo: Repository) -> None:
+    unlisted = _UnlistedAgent("T006", "Slack", "4300", account_unlisted=True)
+    listed = _UnlistedAgent("T006", "Slack", "4300", account_unlisted=False)
+
+    flagged = _decisions(unlisted, repo)["T006"]
+    normal = _decisions(listed, repo)["T006"]
+
+    assert flagged.account_unlisted is True
+    assert flagged.outcome is Outcome.REVIEW
+    assert "account_unlisted" in flagged.confidence_signals
+    assert "guard:account_unlisted" in flagged.confidence_signals
+    assert normal.account_unlisted is False
+    assert normal.outcome is Outcome.AUTO_POST

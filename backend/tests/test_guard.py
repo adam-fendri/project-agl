@@ -24,12 +24,14 @@ def _proposal(
     account: str,
     match: list[str],
     anomaly: Anomaly | None = None,
+    account_unlisted: bool = False,
 ) -> Proposal:
     return Proposal(
         vendor=vendor,
         account=account,
         account_reasoning="test",
         account_confidence=Confidence.HIGH,
+        account_unlisted=account_unlisted,
         match=match,
         match_reasoning="test" if match else None,
         match_confidence=Confidence.HIGH,
@@ -81,6 +83,16 @@ def test_account_not_in_chart_forced_to_review(
     assert verdict.passed is False
     assert verdict.forced_outcome is Outcome.REVIEW
     assert "account_not_in_chart" in verdict.failed_checks
+
+
+def test_account_unlisted_forced_to_review(repo: Repository, by_id: dict[str, Transaction]) -> None:
+    proposal = _proposal("Slack", "4300", [], account_unlisted=True)
+
+    verdict = run_guard(proposal, by_id["T006"], repo, {})
+
+    assert verdict.passed is False
+    assert verdict.forced_outcome is Outcome.REVIEW
+    assert "account_unlisted" in verdict.failed_checks
 
 
 def test_direction_mismatch_forced_to_review(

@@ -101,6 +101,7 @@ def _assemble(
         account=proposal.account,
         account_reasoning=proposal.account_reasoning,
         account_confidence=proposal.account_confidence,
+        account_unlisted=proposal.account_unlisted,
         match=list(proposal.match),
         match_reasoning=proposal.match_reasoning,
         match_status=match_status,
@@ -180,6 +181,9 @@ def _confidence_signals(
         signals.append("account_in_chart")
     else:
         signals.append("account_not_in_chart")
+
+    if proposal.account_unlisted:
+        signals.append("account_unlisted")
 
     if proposal.match:
         signals.append(

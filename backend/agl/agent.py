@@ -23,6 +23,7 @@ Choose the one chart-of-accounts number this transaction belongs to; this drives
 - When an incoming payment settles an issued invoice, book it to the receivables account rather than a revenue account; the revenue was already recognised when the invoice was issued.
 - Routine transactions such as subscriptions, payroll, rent, taxes, and recognisable supplier costs usually map to one listed account straight from the description.
 - When more than one listed account could correctly take the line because the nature of the spend is unsettled, still pick your best account and carry that doubt into account_confidence.
+- When no listed account properly fits the nature of the spend, the general other-costs line included, set account_unlisted true, keep your closest account, and rate account_confidence LOW so the accountant can add the right account.
 </categorize>
 
 <reconcile>
@@ -96,6 +97,7 @@ _JSON_INSTRUCTION = (
     "Return ONLY a single JSON object, no prose and no markdown fence, with exactly these keys: "
     'vendor (string), account (a chart-of-accounts number that appears in the evidence), '
     "account_reasoning (string), account_confidence (one of high, medium, low), "
+    "account_unlisted (true only when no listed account fits, else false), "
     "match (array of settled document ids, empty array if none), match_reasoning (string or null), "
     "match_confidence (one of high, medium, low), "
     'anomaly (null, or an object {"type": one of duplicate, missing_counterpart, suspicious_vendor, '

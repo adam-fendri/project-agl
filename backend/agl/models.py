@@ -164,6 +164,10 @@ class Proposal(BaseModel):
     account_confidence: Confidence = Field(
         description="How sure the account is right: high only when the description plus any correction make it unambiguous."
     )
+    account_unlisted: bool = Field(
+        default=False,
+        description="True only when no listed account properly fits the spend, the general other-costs line included.",
+    )
     match: list[str] = Field(
         default_factory=list,
         description="The invoice/bill id(s) this transaction settles — usually one, two when one payment clears two documents, empty if none.",
@@ -229,6 +233,7 @@ class Decision(BaseModel):
     account: str
     account_reasoning: str
     account_confidence: Confidence
+    account_unlisted: bool = False
     match: list[str]
     match_reasoning: str | None
     match_status: MatchStatus

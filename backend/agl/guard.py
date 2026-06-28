@@ -32,12 +32,13 @@ def run_guard(
 ) -> GuardVerdict:
     """Check the agent's proposal against hard facts before any auto-post.
 
-    Verifies the account exists, the matched amount sums exactly (else partial), the matched
-    document is not contradicted by a same-amount sibling whose counterparty disagrees (else
-    ambiguous), settling an issued invoice is not re-booked as revenue (else double-counted),
-    the document is not claimed by an earlier transaction (else duplicate), the direction is
-    right, no prior correction is contradicted, no material missing document is unflagged, and
-    no earlier transaction looks like the same payment (else a possible duplicate to review).
+    Verifies the account exists, the agent did not flag that no listed account fits the spend, the
+    matched amount sums exactly (else partial), the matched document is not contradicted by a
+    same-amount sibling whose counterparty disagrees (else ambiguous), settling an issued invoice
+    is not re-booked as revenue (else double-counted), the document is not claimed by an earlier
+    transaction (else duplicate), the direction is right, no prior correction is contradicted, no
+    material missing document is unflagged, and no earlier transaction looks like the same payment
+    (else a possible duplicate to review).
     Any failure DOWNGRADES to review via ``forced_outcome`` — it never rewrites the agent's choice.
     """
     accounts = repo.accounts(txn.customer_id)
@@ -48,6 +49,9 @@ def run_guard(
 
     if proposal.account not in account_numbers:
         failures.append("account_not_in_chart")
+
+    if proposal.account_unlisted:
+        failures.append("account_unlisted")
 
     if _correction_conflict(proposal, repo.corrections(txn.customer_id), rubriek_by_number):
         failures.append("correction_conflict")

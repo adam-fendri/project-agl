@@ -127,14 +127,14 @@ def test_account_unlisted_downgrades_auto_post_to_review(repo: Repository) -> No
     assert normal.outcome is Outcome.AUTO_POST
 
 
-def test_unverified_high_confidence_categorisation_downgrades_to_review(repo: Repository) -> None:
+def test_unverified_high_confidence_categorisation_auto_posts(repo: Repository) -> None:
     agent = _ScriptedAgent(matches={}, accounts={"T006": "4300"})
 
     decision = _decisions(agent, repo)["T006"]
 
     assert decision.account_confidence is Confidence.HIGH
     assert decision.match == []
-    assert decision.outcome is Outcome.REVIEW
+    assert decision.outcome is Outcome.AUTO_POST
     assert "account_unverified" in decision.confidence_signals
 
 

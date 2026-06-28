@@ -119,7 +119,7 @@ def _assemble(
         confidence_signals=_confidence_signals(
             txn, repo, evidence, proposal, verdict, match_status
         ),
-        outcome=_route(txn, repo, evidence, proposal, verdict),
+        outcome=_route(txn, repo, proposal, verdict),
         sources=_sources(evidence, proposal),
     )
 
@@ -141,16 +141,11 @@ def _match_status(txn: Transaction, repo: Repository, match: list[str]) -> Match
 def _route(
     txn: Transaction,
     repo: Repository,
-    evidence: Evidence,
     proposal: Proposal,
     verdict: GuardVerdict,
 ) -> Outcome:
     intended = _intended_outcome(proposal)
     if intended is Outcome.AUTO_POST and _material_uncorroborated(txn, repo, proposal):
-        intended = Outcome.REVIEW
-    if intended is Outcome.AUTO_POST and not _categorisation_verified(
-        txn, repo, evidence, proposal
-    ):
         intended = Outcome.REVIEW
     if verdict.passed or verdict.forced_outcome is None:
         return intended

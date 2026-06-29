@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
+from pathlib import Path
 
 from agl.api import AssignAccountRequest, Console, CreateAccountRequest
 from agl.learning import canonical_vendor, vendor_cost_account
@@ -36,8 +37,8 @@ class _ScriptedAgent:
         )
 
 
-def _console(agent: _ScriptedAgent) -> Console:
-    return Console(Repository(), agent, CUSTOMER)
+def _console(agent: _ScriptedAgent, runtime_dir: Path) -> Console:
+    return Console(Repository(runtime_dir=runtime_dir), agent, CUSTOMER)
 
 
 def _same_vendor_pair() -> tuple[str, str]:
@@ -50,8 +51,8 @@ def _same_vendor_pair() -> tuple[str, str]:
     raise AssertionError("no vendor with two transactions in the seed data")
 
 
-def test_run_then_accept_posts() -> None:
-    console = _console(_ScriptedAgent(accounts={}, confidence=Confidence.LOW))
+def test_run_then_accept_posts(tmp_path: Path) -> None:
+    console = _console(_ScriptedAgent(accounts={}, confidence=Confidence.LOW), tmp_path)
     asyncio.run(console.run())
 
     review = console.queue()
@@ -62,9 +63,9 @@ def test_run_then_accept_posts() -> None:
     assert any(d.transaction_id == target for d in console.posted())
 
 
-def test_correct_applies_account_and_moves_same_vendor_sibling() -> None:
+def test_correct_applies_account_and_moves_same_vendor_sibling(tmp_path: Path) -> None:
     first, sibling = _same_vendor_pair()
-    console = _console(_ScriptedAgent(accounts={first: "4900", sibling: "4900"}))
+    console = _console(_ScriptedAgent(accounts={first: "4900", sibling: "4900"}), tmp_path)
     asyncio.run(console.run())
 
     response = asyncio.run(console.correct(first, corrected_account="4300", corrected_match=None))
@@ -75,9 +76,9 @@ def test_correct_applies_account_and_moves_same_vendor_sibling() -> None:
     assert console.decision(sibling).account == "4300"
 
 
-def test_create_and_assign_new_account() -> None:
+def test_create_and_assign_new_account(tmp_path: Path) -> None:
     target, _ = _same_vendor_pair()
-    console = _console(_ScriptedAgent(accounts={target: "4900"}))
+    console = _console(_ScriptedAgent(accounts={target: "4900"}), tmp_path)
     asyncio.run(console.run())
 
     asyncio.run(
@@ -92,9 +93,9 @@ def test_create_and_assign_new_account() -> None:
     assert console.decision(target).account == "4999"
 
 
-def test_trace_returns_the_decision_and_prompt() -> None:
+def test_trace_returns_the_decision_and_prompt(tmp_path: Path) -> None:
     target, _ = _same_vendor_pair()
-    console = _console(_ScriptedAgent(accounts={target: "4900"}))
+    console = _console(_ScriptedAgent(accounts={target: "4900"}), tmp_path)
     asyncio.run(console.run())
 
     trace = console.trace(target)

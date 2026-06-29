@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Project AGL — the solution</title>
+<style>
+  :root{
+    --paper:#f6f4ee; --ink:#1b1d22; --ink2:#565a62; --faint:#8c9099;
+    --line:#d7d2c4; --line2:#e7e3d8; --accent:#0f5e54; --accent2:#0a463f; --wash:#e9efeb;
+    --serif:"Iowan Old Style","Palatino Linotype",Charter,Georgia,"Times New Roman",serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:#cbc8be;font-family:var(--sans);color:var(--ink);
+    display:flex;flex-direction:column;align-items:center;gap:24px;padding:30px 16px 60px;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+  .tnum{font-variant-numeric:tabular-nums;}
+  .slide{position:relative;width:1280px;height:720px;background:var(--paper);
+    padding:62px 76px 28px;display:flex;flex-direction:column;overflow:hidden;
+    box-shadow:0 14px 44px rgba(0,0,0,.20);}
+  .eyebrow{font-size:12px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--accent);display:flex;align-items:center;gap:13px;}
+  .eyebrow::before{content:"";width:28px;height:2px;background:var(--accent);}
+  h1{font-family:var(--serif);font-weight:600;color:var(--ink);margin:24px 0 0;
+    font-size:45px;line-height:1.12;letter-spacing:-.004em;max-width:25ch;}
+  h1.big{font-size:55px;line-height:1.08;max-width:19ch;}
+  h1 em{font-style:italic;color:var(--accent2);}
+  .lead{font-size:20px;line-height:1.58;color:var(--ink2);margin-top:24px;max-width:62ch;}
+  .lead b{color:var(--ink);font-weight:600;}
+  .meta{display:flex;gap:26px;margin-top:30px;font-size:13.5px;color:var(--ink);}
+  .meta span .k{color:var(--faint);margin-right:8px;letter-spacing:.02em;}
+  .proof{display:flex;gap:44px;margin-top:36px;padding-top:26px;border-top:1px solid var(--line);}
+  .proof > div{display:flex;flex-direction:column;gap:9px;}
+  .proof .n{font-family:var(--serif);font-size:42px;font-weight:600;color:var(--accent2);line-height:1;font-variant-numeric:tabular-nums;}
+  .proof .pl{font-size:13px;color:var(--ink2);max-width:15ch;line-height:1.35;}
+  .foot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;
+    border-top:1px solid var(--line);padding-top:12px;font-size:11.5px;color:var(--faint);letter-spacing:.04em;}
+  .foot .tnum{font-family:var(--mono);}
+  .cases{margin-top:16px;border-top:1px solid var(--line);}
+  .case{display:grid;grid-template-columns:1.35fr .8fr 1.7fr;gap:28px;align-items:baseline;
+    padding:10px 0;border-bottom:1px solid var(--line2);}
+  .case .v{font-size:16.5px;color:var(--ink);font-weight:600;}
+  .case .v .d{display:block;font-size:12px;color:var(--faint);font-weight:400;margin-top:4px;font-family:var(--mono);letter-spacing:.01em;}
+  .case .acct{font-family:var(--mono);font-size:15px;color:var(--accent2);font-weight:600;white-space:nowrap;}
+  .case .why{font-size:14px;color:var(--ink2);line-height:1.45;}
+  .note{margin-top:14px;font-size:14.5px;color:var(--ink2);max-width:74ch;line-height:1.5;}
+  .note b{color:var(--ink);font-weight:600;}
+
+  .split{display:grid;gap:46px;margin-top:26px;}
+  .split.even{grid-template-columns:1fr 1fr;}
+  .split.fig{grid-template-columns:1fr 432px;gap:44px;align-items:start;}
+  .colh{font-size:11.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--accent);margin:0 0 6px;display:flex;align-items:center;gap:11px;}
+  .colh::before{content:"";width:22px;height:2px;background:var(--accent);}
+
+  .rows{margin-top:18px;}
+  .row{display:grid;grid-template-columns:210px 1fr;gap:26px;align-items:baseline;
+    padding:12px 0;border-bottom:1px solid var(--line2);}
+  .row:first-child{border-top:1px solid var(--line);}
+  .row .rk{font-family:var(--mono);font-size:13.5px;color:var(--accent2);font-weight:600;line-height:1.4;}
+  .row .rb{font-size:14.5px;color:var(--ink2);line-height:1.5;}
+  .row .rb b{color:var(--ink);font-weight:600;}
+  .row .rb i{font-style:italic;color:var(--faint);}
+
+  .steps{margin-top:22px;}
+  .step{display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:baseline;
+    padding:13px 0;border-bottom:1px solid var(--line2);}
+  .step:first-child{border-top:1px solid var(--line);}
+  .step .sn{font-family:var(--serif);font-size:25px;font-weight:600;color:var(--accent2);
+    line-height:1;font-variant-numeric:tabular-nums;}
+  .step .sb{font-size:16px;color:var(--ink2);line-height:1.5;}
+  .step .sb b{color:var(--ink);font-weight:600;}
+
+  .grid{display:grid;border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
+  .grid.g4{grid-template-columns:repeat(4,1fr);}
+  .grid.g3{grid-template-columns:repeat(3,1fr);}
+  .cell{padding:18px 24px 16px;border-right:1px solid var(--line2);}
+  .cell:last-child{border-right:none;}
+  .cell .gn{font-family:var(--serif);font-size:38px;font-weight:600;color:var(--accent2);
+    line-height:1;font-variant-numeric:tabular-nums;}
+  .cell .gn .u{font-size:18px;color:var(--faint);}
+  .cell .gl{font-size:12.5px;color:var(--ink2);margin-top:10px;line-height:1.4;}
+
+  .figure{border:1px solid var(--line);background:#fff;padding:7px;}
+  .figure img{display:block;width:100%;height:auto;}
+  .figure.tall{display:flex;align-items:center;justify-content:center;height:516px;overflow:hidden;}
+  .figure.tall img{height:100%;width:auto;}
+  .figcap{font-size:11.5px;color:var(--faint);margin-top:10px;letter-spacing:.02em;line-height:1.4;}
+
+  .hl{margin-top:18px;border-left:2px solid var(--accent);padding:3px 0 3px 18px;}
+  .hl .t{font-size:15.5px;color:var(--ink2);line-height:1.52;max-width:84ch;}
+  .hl .t b{color:var(--accent2);font-weight:600;}
+
+  .chips{display:flex;flex-wrap:wrap;gap:9px;margin-top:16px;}
+  .chip{font-family:var(--mono);font-size:12.5px;color:var(--accent2);font-weight:600;
+    border:1px solid var(--line);padding:6px 11px;}
+  .mini{font-size:14px;color:var(--ink2);line-height:1.42;margin-top:8px;}
+  .mini .m{display:block;padding:8px 0;border-bottom:1px solid var(--line2);}
+  .mini .m:first-child{border-top:1px solid var(--line);}
+  .mini .m b{color:var(--ink);font-weight:600;}
+
+  .liftfig{display:flex;align-items:center;gap:24px;margin-top:24px;padding:22px 0;
+    border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
+  .liftfig .ln{font-family:var(--serif);font-size:48px;font-weight:600;line-height:1;
+    font-variant-numeric:tabular-nums;}
+  .liftfig .cold{color:var(--faint);}
+  .liftfig .warm{color:var(--accent2);}
+  .liftfig .arr{font-size:34px;color:var(--accent);line-height:1;}
+  .liftfig .lab{font-size:13.5px;color:var(--ink2);line-height:1.4;max-width:22ch;}
+  .liftfig .lab b{color:var(--ink);font-weight:600;}
+
+  .kicker{margin-top:20px;padding-top:18px;border-top:1px solid var(--line);
+    font-family:var(--serif);font-size:21px;line-height:1.5;color:var(--ink);max-width:96ch;}
+  .kicker b{color:var(--accent2);font-weight:600;font-style:italic;}
+
+  .arch{display:block;width:100%;height:auto;margin-top:8px;}
+  .arch text{font-family:var(--sans);}
+  .arch .bl{font-size:11.5px;font-weight:700;letter-spacing:.1em;fill:var(--accent2);}
+  .arch .ll{font-size:9.5px;font-weight:700;letter-spacing:.14em;fill:var(--faint);}
+  .arch .nt{font-size:12px;font-weight:600;fill:var(--ink);}
+  .arch .ntm{font-family:var(--mono);font-size:12px;font-weight:600;fill:var(--accent2);}
+  .arch .ns{font-size:9.5px;fill:var(--ink2);}
+  .arch .nm{font-family:var(--mono);font-size:9px;fill:var(--accent2);}
+  .arch .tg{font-size:8px;font-weight:700;letter-spacing:.09em;fill:var(--accent);}
+  .arch .ctr{text-anchor:middle;}
+  .arch .bandc{fill:#ece8dd;}
+  .arch .bandl{fill:#dde9e4;}
+  .arch .lane{fill:#f0eee6;}
+  .arch .box{fill:#fcfbf7;stroke:var(--line);stroke-width:1;}
+  .arch .boxk{fill:#fcfbf7;stroke:var(--accent);stroke-width:1.6;}
+  .arch .chipb{fill:#fff;stroke:var(--line);stroke-width:1;}
+  .arch .rail{fill:#f0eee6;stroke:var(--line);stroke-width:1;}
+  .arch .fl{stroke:var(--accent2);stroke-width:1.5;fill:none;}
+  .arch .fld{stroke:var(--accent);stroke-width:1.3;fill:none;stroke-dasharray:3 3;}
+  .arch .fll{stroke:var(--faint);stroke-width:1.2;fill:none;stroke-dasharray:5 4;}
+  .arch .hr{stroke:var(--line2);stroke-width:1;}
+  .arch .vr{stroke:var(--line);stroke-width:1;}
+
+  #s4 .case{padding:8px 0;}
+
+  @page{size:1280px 720px;margin:0;}
+  @media print{
+    html,body{background:#fff;}
+    body{display:block;gap:0;padding:0;}
+    .slide{box-shadow:none;margin:0;page-break-after:always;break-after:page;width:1280px;height:720px;}
+    .slide:last-child{page-break-after:auto;break-after:auto;}
+  }
+</style>
+</head>
+<body>
+
+<section class="slide" id="s1">
+  <div class="eyebrow">Project AGL · the solution</div>
+  <h1 class="big">Every bank line becomes a ledger entry — the agent posts what it can <em>prove</em>, and defers the rest.</h1>
+  <p class="lead">One structured model call per transaction, <b>grounded by code and re-checked by a strict guard</b> that can only downgrade — never rewrite. The accountant sees a ranked queue of just what needs them, and one correction teaches every similar line.</p>
+  <div class="proof" style="margin-top:24px;padding-top:22px;">
+    <div><span class="n">85<span style="font-size:22px;color:var(--faint);">/100</span></span><span class="pl">auto-posted, untouched</span></div>
+    <div><span class="n">0.95</span><span class="pl">categorisation accuracy</span></div>
+    <div><span class="n">25/25</span><span class="pl">reconciliations correct</span></div>
+    <div><span class="n" style="font-size:17.5px;line-height:1.26;max-width:21ch;">never confidently wrong where provable</span><span class="pl" style="max-width:30ch;margin-top:3px;">0 on reconciliation &amp; material entries — 1 immaterial miss</span></div>
+  </div>
+  <div class="foot"><span>Studio Vondel B.V. · 100 Q1 2026 bank lines · live Claude model (Sonnet 4.6) · real eval</span><span class="tnum">01</span></div>
+</section>
+
+<section class="slide" id="s2">
+  <div class="eyebrow">The shape of the system · one pass per line</div>
+  <h1 style="font-size:29px;margin:13px 0 0;max-width:none;">Code gathers the facts; the model judges; code re-checks and routes. The accountant sees only the lines worth their time.</h1>
+  <svg class="arch" viewBox="0 0 1128 196" role="img" aria-label="Project AGL — one pass per transaction" style="margin-top:14px;">
+    <defs>
+      <marker id="ah" viewBox="0 0 8 8" markerWidth="7" markerHeight="7" refX="6" refY="4" orient="auto-start-reverse"><path d="M0,0 L7,4 L0,8 z" fill="#0a463f"/></marker>
+    </defs>
+
+    <rect class="lane" x="6" y="20" width="144" height="166"/>
+    <rect class="bandc" x="162" y="20" width="196" height="166"/>
+    <rect class="bandl" x="370" y="20" width="300" height="166"/>
+    <rect class="bandc" x="682" y="20" width="250" height="166"/>
+    <rect class="lane" x="944" y="20" width="178" height="166"/>
+
+    <text class="ll ctr" x="78" y="13">CONTEXT IN</text>
+    <text class="bl ctr" x="260" y="13">CODE · GROUNDS</text>
+    <text class="bl ctr" x="520" y="13">LLM · DECIDES</text>
+    <text class="bl ctr" x="807" y="13">CODE · GUARDS, THEN ROUTES</text>
+    <text class="ll ctr" x="1033" y="13">WHERE EACH LINE GOES</text>
+
+    <rect class="box" x="12" y="34" width="132" height="140"/>
+    <text class="nt" x="22" y="54">Repository</text>
+    <text class="ns" x="22" y="76">transactions,</text>
+    <text class="ns" x="22" y="91">invoices, bills,</text>
+    <text class="ns" x="22" y="106">chart of accounts,</text>
+    <text class="ns" x="22" y="121">past corrections</text>
+    <text class="tg" x="22" y="160">READ-ONLY</text>
+
+    <rect class="box" x="170" y="34" width="180" height="140"/>
+    <text class="nt" x="180" y="54">Ground</text>
+    <text class="ns" x="180" y="78">code assembles the</text>
+    <text class="ns" x="180" y="93">verifiable facts for</text>
+    <text class="ns" x="180" y="108">this one line</text>
+    <text class="tg" x="180" y="160">NO GUESSWORK</text>
+
+    <rect class="boxk" x="378" y="34" width="284" height="140"/>
+    <text class="nt" x="388" y="54">Decide</text>
+    <text class="ns" x="388" y="78">one model call judges the line —</text>
+    <text class="ns" x="388" y="96">· which account it belongs to</text>
+    <text class="ns" x="388" y="112">· which document it settles</text>
+    <text class="ns" x="388" y="128">· whether it looks anomalous</text>
+    <text class="ns" x="388" y="150">each with a reason and a confidence</text>
+
+    <rect class="box" x="690" y="34" width="234" height="140"/>
+    <text class="nt" x="700" y="54">Guard, then route</text>
+    <text class="ns" x="700" y="78">code re-checks the call</text>
+    <text class="ns" x="700" y="93">against hard facts and</text>
+    <text class="ns" x="700" y="108">can only downgrade it —</text>
+    <text class="ns" x="700" y="123">then sends the line</text>
+    <text class="ns" x="700" y="138">one of four ways</text>
+
+    <rect class="chipb" x="952" y="34" width="162" height="26"/>
+    <text class="nm ctr" x="1033" y="51" style="font-size:10px;">auto-post</text>
+    <rect class="chipb" x="952" y="64" width="162" height="26"/>
+    <text class="nm ctr" x="1033" y="81" style="font-size:10px;">review queue</text>
+    <rect class="chipb" x="952" y="94" width="162" height="26"/>
+    <text class="nm ctr" x="1033" y="111" style="font-size:10px;">anomaly</text>
+    <rect class="chipb" x="952" y="124" width="162" height="26"/>
+    <text class="nm ctr" x="1033" y="141" style="font-size:10px;">request document</text>
+    <text class="ns" x="952" y="166">accountant works the queue;</text>
+    <text class="ns" x="952" y="179">auto-posts are spot-checked</text>
+
+    <path class="fl" d="M150,100 L160,100" marker-end="url(#ah)"/>
+    <path class="fl" d="M358,100 L368,100" marker-end="url(#ah)"/>
+    <path class="fl" d="M670,100 L680,100" marker-end="url(#ah)"/>
+    <path class="fl" d="M932,100 C940,100 944,47 950,47" marker-end="url(#ah)"/>
+    <path class="fl" d="M932,100 C940,100 944,77 950,77" marker-end="url(#ah)"/>
+    <path class="fl" d="M932,100 C940,100 944,107 950,107" marker-end="url(#ah)"/>
+    <path class="fl" d="M932,100 C940,100 944,137 950,137" marker-end="url(#ah)"/>
+  </svg>
+  <div class="hl" style="margin-top:16px;"><div class="t"><b>ground</b> — code gathers the facts. &nbsp;<b>decide</b> — one model call makes the judgement. &nbsp;<b>guard</b> — a code re-check that can only downgrade, never rewrite. &nbsp;<b>gate</b> — the bar a line must clear to auto-post: both confidences high and a clean guard. &nbsp;<b>route</b> — sends each line to one of four places: auto-post, review, anomaly, or request-document.</div></div>
+  <div class="foot"><span>One agent interface, swappable backends — pydantic-ai (Sonnet 4.6 / Gemini 2.5 Pro) · claude -p committed-eval path · test stub</span><span class="tnum">02</span></div>
+</section>
+
+<section class="slide" id="s3">
+  <div class="eyebrow">How the agent decides · one call, four judgements</div>
+  <h1>One model call per line makes every judgement — the agent decides, the code never does.</h1>
+  <p class="lead" style="margin-top:16px;max-width:96ch;">No tools, no back-and-forth: code lays out the verifiable facts and the model judges the line in one pass — at <b>temperature zero</b>, the lowest-randomness setting, so the same line always gives the same answer.</p>
+  <div class="steps">
+    <div class="step"><div class="sn">1</div><div class="sb"><b>Which account.</b> The one chart entry the line belongs to — read from the description and counterparty, not a vendor lookup.</div></div>
+    <div class="step"><div class="sn">2</div><div class="sb"><b>Does it settle an open invoice or bill</b> — <b>verifying</b> the provided match by payer and amount rather than trusting it.</div></div>
+    <div class="step"><div class="sn">3</div><div class="sb"><b>Is it anomalous</b> — a duplicate payment, a miscategorisation, or a missing counterpart.</div></div>
+    <div class="step"><div class="sn">4</div><div class="sb"><b>How confident</b>, so post or defer — and if a material document is missing, request it from the entrepreneur.</div></div>
+  </div>
+  <div class="hl"><div class="t"><b>Two confidences — account and match — rated independently, never one blended number.</b> Auto-post needs both high <b>and</b> a clean guard <b>and</b> a corroborating fact: the vendor recurs three or more times, a correction pins it, vendor history or the settling bill agrees, or the realised VAT rate matches the account treatment.</div></div>
+  <div class="foot"><span>agent.decide → typed Proposal(account · match · anomaly · two confidences · a reason each)</span><span class="tnum">03</span></div>
+</section>
+
+<section class="slide" id="s4">
+  <div class="eyebrow">Categorisation · where it is actually hard</div>
+  <h1 style="font-size:34px;max-width:44ch;margin-top:16px;">The same vendor is two accounts. A salary-shaped line is a freelancer. A laptop is an asset; a monitor isn't.</h1>
+  <p class="note" style="margin-top:12px;margin-bottom:0;max-width:none;"><b>Reading the codes:</b> these are a Dutch chart of accounts; the first digit is the <i>rubriek</i> (account class) — <b>0xxx</b> balance sheet &amp; equity · <b>1xxx</b> receivables, payables &amp; VAT · <b>4xxx</b> costs · <b>8xxx</b> revenue.</p>
+  <div class="cases">
+    <div class="case">
+      <div class="v">GOOGLE *GSUITE / *ADS<span class="d">T005 · T068</span></div>
+      <div class="acct">4300 → 4400</div>
+      <div class="why">Same vendor root; the product token decides — software vs marketing. Naive vendor-mapping books both to one account.</div>
+    </div>
+    <div class="case">
+      <div class="v">J. de Vries — SEPA "factuur"<span class="d">T043 · −€2.904</span></div>
+      <div class="acct">4100, not 4000</div>
+      <div class="why">A personal-name, salary-shaped line — but de Vries isn't one of the six payrolled staff and carries a freelance invoice. Inhuur (freelance hire), not brutoloon (gross salary).</div>
+    </div>
+    <div class="case">
+      <div class="v">MacBook Pro / Dell monitor<span class="d">T033 · T075</span></div>
+      <div class="acct">0150 vs 4500</div>
+      <div class="why">€2.200 net capitalises and depreciates; €380 is expensed at once. One ~€450 threshold, applied in both directions.</div>
+    </div>
+    <div class="case">
+      <div class="v">T. Bakker — round transfer<span class="d">T016 · T079</span></div>
+      <div class="acct">0600</div>
+      <div class="why">Off-cycle, round, no description: an owner's draw (privé-opname), not an expense — and distinct from his salaris (salary) on the 25th.</div>
+    </div>
+    <div class="case">
+      <div class="v">Centraal Beheer / NS Business<span class="d">T002 · T047</span></div>
+      <div class="acct">4700 · 4600 @ 9%</div>
+      <div class="why">Insurance carries no reclaimable BTW (the Dutch VAT) — nothing to deduct; rail travel is taxed at 9%, not 21%. The VAT rate is part of the decision, not an afterthought.</div>
+    </div>
+  </div>
+  <p class="note" style="margin-top:12px;"><b>Each is a rule the agent applies and the guard re-checks.</b> A correction teaches it once — keyed to the cleaned vendor, not the raw bank string — and it lands on every sibling, not just the line you fixed.</p>
+  <div class="foot"><span>Project AGL — Challenge 2</span><span class="tnum">categorisation</span></div>
+</section>
+
+<section class="slide" id="s5">
+  <div class="eyebrow">Reconciliation · verify, don't trust</div>
+  <h1 style="font-size:33px;max-width:none;">The feed's matches arrive ~96% right — the agent confirms each, never trusts it.</h1>
+  <p class="lead" style="margin-top:12px;font-size:16.5px;max-width:none;">That ~96% counts all 100 lines, most of which correctly have no document. On the <b>26 lines where the feed actually claims a match</b>, only <b>22 are right (~85%)</b> — one in seven wrong. That is why every suggestion is re-checked on payer and amount before it can post.</p>
+  <div class="cases">
+    <div class="case">
+      <div class="v">Same-amount collision<span class="d">T072 → INV-004 · T074 → INV-005</span></div>
+      <div class="acct">payer decides</div>
+      <div class="why">INV-004 (Voss &amp; Partners) and INV-005 (Lumen Retail) are both €7.260, so the amount is useless — the counterparty on the line resolves it.</div>
+    </div>
+    <div class="case">
+      <div class="v">The duplicate<span class="d">T046 · €7.865 → Studio Pixel</span></div>
+      <div class="acct">ANOMALY</div>
+      <div class="why">A second identical payment against an already-paid bill. It looks like a perfect match by amount and vendor — so it is flagged, not booked.</div>
+    </div>
+    <div class="case">
+      <div class="v">One payment, two documents<span class="d">T076 · €3.375,90</span></div>
+      <div class="acct">INV-006 + INV-007</div>
+      <div class="why">€2.165,90 + €1.210,00 sums exactly. The agent splits the settlement across both, not one of them.</div>
+    </div>
+    <div class="case">
+      <div class="v">The €10 short-pay<span class="d">T045 vs INV-002</span></div>
+      <div class="acct">match · FLAG</div>
+      <div class="why">Right counterparty and reference, €10 under the invoice. Matched, but the gap is flagged for review — never silently closed.</div>
+    </div>
+  </div>
+  <div class="hl"><div class="t"><b>The VAT-integrity trap.</b> An inflow that settles an invoice the studio already issued books to <b>1300 Debiteuren</b> (receivables), never <b>8000 Omzet</b> (revenue) — to revenue would count the same turnover and its output BTW (VAT) twice, so a guard check blocks it. Net: a <b>~96%</b> feed becomes <b>0.99 across all 100 lines</b> and a clean <b>25 of 25</b> on the rows that settle a document.</div></div>
+  <div class="foot"><span>Feed: 96/100 match decisions right, but only 22 of its 26 positive matches · agent re-checks each on payer + amount</span><span class="tnum">05</span></div>
+</section>
+
+<section class="slide" id="s6">
+  <div class="eyebrow">The guard · never confidently wrong</div>
+  <h1 style="font-size:31px;max-width:none;">A strict, downgrade-only backstop — it can defer an auto-post, never rewrite the decision.</h1>
+  <p class="lead" style="margin-top:11px;font-size:15.5px;max-width:none;">Before any line auto-posts, these hard-fact checks run in code. Each can only push a line <b>down</b> — to review, anomaly, or request — never change the account the agent chose. That asymmetry is what lets the confident bulk post itself safely.</p>
+  <div class="rows" style="margin-top:10px;">
+    <div class="row"><div class="rk">same-amount collision</div><div class="rb">Two open documents share the amount — don't let the agent match the wrong invoice.</div></div>
+    <div class="row"><div class="rk">revenue-on-settled</div><div class="rb">An issued invoice's settlement may not be re-booked as revenue. <b>No double VAT.</b></div></div>
+    <div class="row"><div class="rk">duplicate</div><div class="rb">An already-cleared document, or the same amount and vendor within 14 days.</div></div>
+    <div class="row"><div class="rk">amount/reference</div><div class="rb">A partial or mismatched settlement is flagged — never silently closed.</div></div>
+    <div class="row"><div class="rk">vat-inconsistent</div><div class="rb">Realised rate against the account's VAT treatment — conservative on disagreement.</div></div>
+    <div class="row"><div class="rk">missing-document</div><div class="rb">A material entry without its VAT document is routed to request, not posted.</div></div>
+    <div class="row"><div class="rk">correction-conflict</div><div class="rb">A convention already taught by the accountant must hold; a contradiction defers.</div></div>
+  </div>
+  <div class="hl"><div class="t"><b>And the material-uncorroborated rule:</b> ≥ €1.000 + a VAT document + a counterparty that disagrees + no remittance reference → <b>review, regardless of the agent's self-confidence.</b> This is how false-confidence stays <b>0</b> on reconciliation and on every material entry.</div></div>
+  <div class="foot"><span>guard.run_guard · checked before any auto-post · may only downgrade auto → review / anomaly / request</span><span class="tnum">06</span></div>
+</section>
+
+<section class="slide" id="s7">
+  <div class="eyebrow">The accountant console · the supervision surface</div>
+  <h1 style="font-size:38px;">Where the human sits: a queue ranked by what's worth their attention — not by time.</h1>
+  <div class="split fig">
+    <div>
+      <p class="lead" style="margin-top:10px;font-size:16px;max-width:46ch;">The accountant never scrolls a chronological list. They open a queue that puts the riskiest, most valuable lines first, act on each card, and let the confident bulk post itself.</p>
+      <div class="rows" style="margin-top:14px;">
+        <div class="row"><div class="rk">ranked</div><div class="rb"><b>impact × uncertainty</b> = P(wrong) × euro value × VAT-sensitivity. Anomalies pinned to the top. Not chronological, not lowest-confidence-first.</div></div>
+        <div class="row"><div class="rk">each card</div><div class="rb">the agent's choice, plain-language reasoning, the source documents, and the <b>two confidences</b>.</div></div>
+        <div class="row"><div class="rk">four levers</div><div class="rb"><b>accept</b> · <b>correct</b> · <b>handle</b> (flag anomaly / request a document) · <b>grow the chart</b> (assign or create an account).</div></div>
+      </div>
+      <p class="note" style="margin-top:18px;">The confident bulk sits in the auto-posted set, reasoning visible and spot-checkable — that untouched bulk is the capacity gain.</p>
+    </div>
+    <div>
+      <div class="figure tall"><img src="screenshots/console-card.png" alt="Accountant console review card"></div>
+      <div class="figcap">Live console — the T046 duplicate flagged for the accountant, with reasoning, sources, both confidences, and the audit trail.</div>
+    </div>
+  </div>
+  <div class="foot"><span>React + Vite console over the JSON API · accept · correct · handle · grow-chart · reasoning shown on every card</span><span class="tnum">07</span></div>
+</section>
+
+<section class="slide" id="s8">
+  <div class="eyebrow">Results · the real eval</div>
+  <h1 style="font-size:39px;">Measured on all 100 lines with a live frontier model — then read honestly against the cautious ideal.</h1>
+  <div class="grid g4" style="margin-top:22px;">
+    <div class="cell"><div class="gn">85</div><div class="gl">auto-posted, untouched</div></div>
+    <div class="cell"><div class="gn">81</div><div class="gl">the cautious ideal — lines ground truth would auto-post</div></div>
+    <div class="cell"><div class="gn">1</div><div class="gl">confidently wrong, and immaterial (a €67,50 line)</div></div>
+    <div class="cell"><div class="gn">0</div><div class="gl">wrong on reconciliation or any material entry</div></div>
+  </div>
+  <div class="grid g4" style="margin-top:16px;">
+    <div class="cell"><div class="gn">0.95</div><div class="gl">categorisation accuracy (95 of 100)</div></div>
+    <div class="cell"><div class="gn">0.99</div><div class="gl">match accuracy (99 of 100; 25/25 on document rows)</div></div>
+    <div class="cell"><div class="gn">1.0<span class="u"> / </span>1.0</div><div class="gl">anomaly precision · recall (1 of 1 caught)</div></div>
+    <div class="cell"><div class="gn">11<span class="u"> · </span>3</div><div class="gl">sent to review · document requested</div></div>
+  </div>
+  <div class="hl"><div class="t"><b>85 auto-posted against a ground-truth ideal of 81 is not four bad posts</b> — it is mild over-eagerness. Exactly one auto-post is a wrong call: an immaterial €67,50 team lunch booked to entertainment instead of office supplies. Zero are wrong on reconciliation or on any material entry. Pushing for the brief's 90%+ auto-rate would only manufacture the false confidence that kills trust.</div></div>
+  <div class="foot"><span>Source: committed eval_artifact.json · Claude Sonnet 4.6 · 100 lines · k=3 (the eval run three times)</span><span class="tnum">08</span></div>
+</section>
+
+<section class="slide" id="s9">
+  <div class="eyebrow">Learning · how a correction takes effect</div>
+  <h1>How the system learns from one correction.</h1>
+  <p class="lead" style="margin-top:16px;max-width:92ch;">A correction is not filed against that one transaction — it becomes a rule the system re-applies on its own. Four steps, and no second model call:</p>
+  <div style="margin-top:22px;border-top:1px solid var(--line);">
+    <div style="display:grid;grid-template-columns:46px 1fr;gap:24px;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line2);">
+      <div style="font-family:var(--serif);font-size:30px;color:var(--accent);line-height:1;">1</div>
+      <div style="font-size:18px;color:var(--ink2);line-height:1.5;"><b style="color:var(--ink);">The accountant fixes one card</b> — sets the right account, or the document it should settle.</div>
+    </div>
+    <div style="display:grid;grid-template-columns:46px 1fr;gap:24px;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line2);">
+      <div style="font-family:var(--serif);font-size:30px;color:var(--accent);line-height:1;">2</div>
+      <div style="font-size:18px;color:var(--ink2);line-height:1.5;"><b style="color:var(--ink);">It is saved as a rule for the vendor, not the line</b> — keyed to the cleaned merchant name (the IBAN and bank-string noise stripped off), so it means "payments to this vendor," not "this one transaction." It is validated first, so it can never name an account or document that does not exist.</div>
+    </div>
+    <div style="display:grid;grid-template-columns:46px 1fr;gap:24px;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line2);">
+      <div style="font-family:var(--serif);font-size:30px;color:var(--accent);line-height:1;">3</div>
+      <div style="font-size:18px;color:var(--ink2);line-height:1.5;"><b style="color:var(--ink);">The system finds that vendor's other not-yet-posted lines and re-runs each</b> — the correction now sits in the model's evidence, and the guard enforces it, so it cannot be ignored on the way through.</div>
+    </div>
+    <div style="display:grid;grid-template-columns:46px 1fr;gap:24px;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line2);">
+      <div style="font-family:var(--serif);font-size:30px;color:var(--accent);line-height:1;">4</div>
+      <div style="font-size:18px;color:var(--ink2);line-height:1.5;"><b style="color:var(--ink);">Those lines settle onto the corrected account themselves</b> — the accountant fixed one card; the rest follow, untouched.</div>
+    </div>
+  </div>
+  <p class="note" style="margin-top:16px;">Why a vendor rule, not a blanket one: it must reach that vendor's lines without touching unrelated ones — so broader patterns generalise only once the accountant confirms them, the precision a ledger needs.</p>
+  <div class="foot"><span>learning.pending_reruns · correction → corrections store → re-run same-vendor siblings</span><span class="tnum">09</span></div>
+</section>
+
+<section class="slide" id="s10">
+  <div class="eyebrow">Tooling &amp; decisions · defended</div>
+  <h1>Every choice earns its place — and names what it gives up.</h1>
+  <div class="rows">
+    <div class="row"><div class="rk">model</div><div class="rb"><b>Claude Sonnet 4.6</b> — frontier reasoning for messy bank-string interpretation. The model sits behind one swappable interface, so Gemini 2.5 Pro can stand in without touching the pipeline.</div></div>
+    <div class="row"><div class="rk">orchestration</div><div class="rb"><b>Single-pass own pipeline, not an agentic tool-calling loop</b> — deterministic, auditable, one call per line; the agent can never auto-post past the guard. <i>Trade: evidence must be well-grounded up front — that is code's job.</i></div></div>
+    <div class="row"><div class="rk">retrieval</div><div class="rb">Relevant corrections injected <b>into the agent's evidence</b> and indexed so code can guard the exact rule — not embeddings RAG. <i>Five corrections fit the prompt; production retrieves — a scale step, not built for five.</i></div></div>
+    <div class="row"><div class="rk">evals</div><div class="rb">A real harness, run three times (<b>k=3</b>, since the model is not perfectly deterministic): per-outcome precision and recall, the false-confidence count, and the accuracy lift each correction produces.</div></div>
+    <div class="row"><div class="rk">observability</div><div class="rb">Every decision can be <b>replayed in full</b> — its grounded facts, the exact prompt, and the guard's verdict — plus env-gated Logfire spans on the model call and the pipeline.</div></div>
+  </div>
+  <div class="foot"><span>AgentProtocol · engine.run_batch · guard.run_guard · /trace · Logfire (project-token gated)</span><span class="tnum">10</span></div>
+</section>
+
+<section class="slide" id="s11">
+  <div class="eyebrow">Capacity · 30 → 60 → 100+</div>
+  <h1>About 2.6 hours saved per customer per month — and the auto-post step is ~95% of it.</h1>
+  <div class="grid g3" style="margin-top:26px;">
+    <div class="cell"><div class="gn">~2.6<span class="u"> h</span></div><div class="gl">saved per customer, per month</div></div>
+    <div class="cell"><div class="gn">~78<span class="u"> h</span></div><div class="gl">freed per month across 30 customers</div></div>
+    <div class="cell"><div class="gn">~95<span class="u">%</span></div><div class="gl">of the saving is the auto-post step</div></div>
+  </div>
+  <div class="hl" style="margin-top:24px;">
+    <div class="t"><b>How it is calculated:</b> saved = (B−s)·a·V + (B−R)·(1−a)·V — B = manual minutes per line, s = spot-check an auto-post, R = review a pre-filled line, a = auto-rate, V = lines/month. With B≈2, s≈0.2, R≈1.5, V≈100, a=0.85: (1.8)(0.85)(100) + (0.5)(0.15)(100) ≈ 153 + 8 ≈ 161 min ≈ <b>2.6 h</b>; the auto-post term is ~95% of it.</div>
+  </div>
+  <p class="note" style="margin-top:14px;"><b>a — the auto-rate — is the only measured input.</b> B≈2 min/line is conservative against published benchmarks (manual invoice/bill entry runs 5–10 min each; bank reconciliation ~20–45 min per 100 lines), so the real saving is likely higher. s, R, V are stated assumptions; the figure scales with volume and the share of invoice-level work.</p>
+  <div class="foot"><span>throughput = auto-posted bulk · trust = ranked review queue · capacity grows with the corrections store</span><span class="tnum">11</span></div>
+</section>
+
+<section class="slide" id="s12">
+  <div class="eyebrow">Roadmap · and the guiding question</div>
+  <h1 style="font-size:37px;">~6 hours to here. A quarter to production — two engineers and an accountant in the loop.</h1>
+  <div class="split even" style="margin-top:22px;">
+    <div>
+      <div class="colh">Now · built, ~6 hours</div>
+      <div class="mini">
+        <span class="m">The <b>engine</b> — ground · decide · guard · route</span>
+        <span class="m">The <b>guard</b> and the <b>learning loop</b></span>
+        <span class="m">The <b>accountant console</b> over a JSON API</span>
+        <span class="m">A <b>real eval</b>, a per-decision trace view, and Logfire</span>
+      </div>
+    </div>
+    <div>
+      <div class="colh">Next · the quarter</div>
+      <div class="mini">
+        <span class="m">Postgres ingestion · correction retrieval at scale</span>
+        <span class="m">Confidence calibration on real data</span>
+        <span class="m">Logfire dashboards + drift alerts</span>
+        <span class="m">Multi-tenant + audit log · eval as a CI gate</span>
+      </div>
+    </div>
+  </div>
+  <p class="note" style="margin-top:16px;max-width:none;"><b>Assumptions:</b> a frontier model clears one-shot interpretation (validated 0.95 / 0.99); the feed is ~96% match-accurate, so verify-not-trust; the accountant is the final authority, clearing the queue daily; real data is messier than this synthetic set, so day-one defers more. <b>Latency vs accuracy vs trust:</b> the accountant side is batch — nobody waits on a call, so trade latency for correctness; the entrepreneur side is the few-second read path.</p>
+  <div class="kicker">An accountant signs off because every entry is <b>grounded, guarded, and gated</b>; the entrepreneur gets an answer before the coffee cools on the fast read path; and neither sees a confident mistake — the two-confidence gate plus the downgrade-only guard.</div>
+  <div class="foot"><span>Project AGL — Challenge 2 · the agent decides, code grounds and guards</span><span class="tnum">12</span></div>
+</section>
+
+</body>
+</html>

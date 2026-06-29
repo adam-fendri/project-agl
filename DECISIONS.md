@@ -176,6 +176,10 @@ SOURCES: Anthropic "Building Effective Agents" (use the simplest thing); structu
 COVERED by D1-D9 + build sequence: live prototype+LLM; model/orchestration/retrieval/evals/observability
 tooling; act-vs-defer (D2); precision bar; prioritization (users over tech); execution (safe/auditable);
 bonuses: eval-with-numbers (step 8) + trace view (D7/D9).
+EVALS cover all THREE pillars the brief names (not two): ACCURACY (categorization/match/reconciliation per run,
+eval_artifact.json) + FALSE-CONFIDENCE (split by task, zero on reconciliation + material, D12) + BLOCKED RESPONSES
+(errored-decision count warm_failed [] / cold_failed [] = 0 of 100, plus the deferral / guard-downgrade per-outcome
+gates: auto/review/anomaly/request_document precision + recall).
 DELIVERABLE CONTENT TO WRITE (not new system decisions, go in the deck/diagram):
 - STATED ASSUMPTIONS: model capability (LLM interprets messy strings -> primary categorizer, verified+gated);
   data quality (real bank data is messy/inconsistent); accountant role (supervise uncertain, correct, sign-off).
@@ -273,6 +277,6 @@ source of truth the deliverables (DECK, ARCHITECTURE, ASSUMPTIONS_AND_TIMELINE) 
   removed; the eval runs the real LLM only (review C4).
 - **GT outcome split is 81 auto / 16 review / 1 anomaly / 2 request-document** (not "two anomalies"): the
   single anomaly is the duplicate, the two requests are the material missing-document cases.
-- **Minutes saved is a MODEL with stated inputs** (DECK Slide 11), not a measured result: the auto-rate is
+- **Minutes saved is a MODEL with stated inputs** (DECK Slide 12), not a measured result: the auto-rate is
   the measured input (~84% on this set, k=3), the per-task minutes are assumptions; the auto-post step dominates
   the minutes, the queue-ranking step holds false-confidence low (answers review M8).

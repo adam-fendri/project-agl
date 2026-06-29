@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import os
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -19,7 +21,9 @@ from agl.models import (
     Account,
     AgentProtocol,
     Confidence,
+    Customer,
     Decision,
+    DocumentStatus,
     Evidence,
     Outcome,
     Proposal,
@@ -85,6 +89,51 @@ class HandledRecord(BaseModel):
     action: str
     vendor: str
     account: str
+
+
+class DocumentView(BaseModel):
+    """An invoice or bill flattened for the console: the fields an accountant needs to read a match or re-point one."""
+
+    id: str
+    kind: str
+    party: str
+    net: Decimal
+    vat: Decimal
+    gross: Decimal
+    date: date
+    status: DocumentStatus
+    account: str | None = None
+
+
+def _documents(repo: Repository, customer_id: str) -> list[DocumentView]:
+    views = [
+        DocumentView(
+            id=inv.id,
+            kind="invoice",
+            party=inv.client,
+            net=inv.net,
+            vat=inv.vat,
+            gross=inv.gross,
+            date=inv.issued_on,
+            status=inv.status,
+        )
+        for inv in repo.invoices(customer_id)
+    ]
+    views += [
+        DocumentView(
+            id=bill.id,
+            kind="bill",
+            party=bill.supplier,
+            net=bill.net,
+            vat=bill.vat,
+            gross=bill.gross,
+            date=bill.received_on,
+            status=bill.status,
+            account=bill.account,
+        )
+        for bill in repo.bills(customer_id)
+    ]
+    return views
 
 
 def _select_agent() -> AgentProtocol:
@@ -175,6 +224,8 @@ class Console:
         self._posted: set[str] = set()
         self._handled: dict[str, HandledRecord] = {}
         self._lock = asyncio.Lock()
+        self._state_file = repo.runtime_dir / "console_state.json"
+        self._load_state()
 
     @classmethod
     def create(cls) -> Console:
@@ -184,6 +235,7 @@ class Console:
         async with self._lock:
             decisions = await run_batch(self._repo, self._agent, self._customer)
             self._decisions = {decision.transaction_id: decision for decision in decisions}
+            self._save_state()
             return decisions
 
     def queue(self) -> list[Decision]:
@@ -207,6 +259,7 @@ class Console:
     def accept(self, txn_id: str) -> Decision:
         found = self.decision(txn_id)
         self._posted.add(txn_id)
+        self._save_state()
         return found
 
     def posted(self) -> list[Decision]:
@@ -228,10 +281,38 @@ class Console:
             transaction_id=txn_id, action=action, vendor=decision.vendor, account=decision.account
         )
         self._handled[txn_id] = record
+        self._save_state()
         return record
 
     def handled(self) -> list[HandledRecord]:
         return list(self._handled.values())
+
+    def _save_state(self) -> None:
+        self._repo.runtime_dir.mkdir(parents=True, exist_ok=True)
+        state = {
+            "customer": self._customer,
+            "decisions": [d.model_dump(mode="json") for d in self._decisions.values()],
+            "posted": sorted(self._posted),
+            "handled": [h.model_dump(mode="json") for h in self._handled.values()],
+        }
+        self._state_file.write_text(json.dumps(state, indent=2))
+
+    def _load_state(self) -> None:
+        if not self._state_file.exists():
+            return
+        try:
+            state = json.loads(self._state_file.read_text())
+            if state.get("customer") != self._customer:
+                return
+            self._decisions = {
+                d["transaction_id"]: Decision.model_validate(d) for d in state.get("decisions", [])
+            }
+            self._posted = set(state.get("posted", []))
+            self._handled = {
+                h["transaction_id"]: HandledRecord.model_validate(h) for h in state.get("handled", [])
+            }
+        except (json.JSONDecodeError, KeyError, ValueError):
+            return
 
     async def correct(
         self,
@@ -259,6 +340,7 @@ class Console:
                     txn, self._repo, evidence, proposal, settled_by
                 )
                 self._posted.discard(affected)
+            self._save_state()
             return CorrectResponse(correction_id=correction.id, reran=reran)
 
     async def create_account(self, body: CreateAccountRequest) -> Account:
@@ -296,6 +378,7 @@ class Console:
                 self._decisions[affected] = finalize(txn, self._repo, evidence, proposal, settled_by)
                 self._posted.discard(affected)
                 updated.append(self._decisions[affected])
+            self._save_state()
             return updated
 
     def _account(self, number: str, name_en: str, name_nl: str, rubriek: Rubriek) -> Account:
@@ -324,6 +407,21 @@ class Console:
 
     def metrics(self) -> EvalReport:
         return run_eval(list(self._decisions.values()), self._repo)
+
+    def customer(self) -> Customer:
+        found = self._repo.customer(self._customer)
+        if found is None:
+            raise HTTPException(status_code=404, detail=f"customer {self._customer!r} not found")
+        return found
+
+    def accounts(self) -> list[Account]:
+        return self._repo.accounts(self._customer)
+
+    def documents(self) -> list[DocumentView]:
+        return _documents(self._repo, self._customer)
+
+    def transactions(self) -> list[Transaction]:
+        return self._repo.transactions(self._customer)
 
     def trace(self, txn_id: str) -> Trace:
         decision = self.decision(txn_id)
@@ -400,6 +498,30 @@ async def handled() -> list[HandledRecord]:
     return _console.handled()
 
 
+@app.get("/customer")
+async def customer() -> Customer:
+    """Return the client whose books the accountant is working: name, VAT scheme, period, owner."""
+    return _console.customer()
+
+
+@app.get("/accounts")
+async def accounts() -> list[Account]:
+    """Return the customer's chart of accounts (number, names, rubriek, VAT treatment) for the correction picker."""
+    return _console.accounts()
+
+
+@app.get("/documents")
+async def documents() -> list[DocumentView]:
+    """Return the customer's invoices and bills (party, amount, date, paid/unpaid) for reading and re-pointing a match."""
+    return _console.documents()
+
+
+@app.get("/transactions")
+async def transactions() -> list[Transaction]:
+    """Return the raw transactions so the console renders each card in human terms (date, party, amount, description)."""
+    return _console.transactions()
+
+
 @app.get("/transaction/{transaction_id}")
 async def get_transaction(transaction_id: str) -> Decision:
     """Return the Decision card for one transaction."""
@@ -457,5 +579,5 @@ async def get_trace(transaction_id: str) -> Trace:
     return _console.trace(transaction_id)
 
 
-_UI_DIR = Path(__file__).resolve().parent.parent / "ui"
+_UI_DIR = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
 app.mount("/", StaticFiles(directory=str(_UI_DIR), html=True), name="ui")

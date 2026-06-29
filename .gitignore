@@ -8,3 +8,4 @@ runtime/
 .DS_Store
 *.log
 sample_context_*.txt
+.ruff_cache/

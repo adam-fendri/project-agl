@@ -110,6 +110,23 @@ class Bill(BaseModel):
     status: DocumentStatus
 
 
+class Customer(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    id: str
+    name: str
+    legal_form: str
+    city: str
+    country: str
+    industry: str
+    headcount: int
+    vat_rate: str
+    vat_filing: str
+    fiscal_period: str
+    owner: str
+    kvk: str
+
+
 class ProvidedMatch(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 

@@ -1,0 +1,16 @@
+[
+  {
+    "id": "studio-vondel",
+    "name": "Studio Vondel B.V.",
+    "legal_form": "Besloten Vennootschap (B.V.)",
+    "city": "Amsterdam",
+    "country": "Netherlands",
+    "industry": "Web & branding studio",
+    "headcount": 8,
+    "vat_rate": "21%",
+    "vat_filing": "Quarterly (BTW per kwartaal)",
+    "fiscal_period": "Q1 2026 (Jan-Mar)",
+    "owner": "Tijn Bakker (founder & creative director, DGA)",
+    "kvk": "80123456"
+  }
+]

@@ -11,6 +11,7 @@ from agl.models import (
     Account,
     Bill,
     Correction,
+    Customer,
     GroundTruth,
     Invoice,
     ProvidedMatch,
@@ -68,6 +69,7 @@ class Repository:
         self._provided = self._load(seeds_dir / "provided_matches.json", ProvidedMatch)
         self._seed_corrections = self._load(seeds_dir / "corrections.json", Correction)
         self._truth = self._load(seeds_dir / "ground_truth.json", GroundTruth)
+        self._customers = self._load(seeds_dir / "customers.json", Customer)
 
         self.store: RuntimeStore[Correction] = RuntimeStore(
             self._runtime_dir / "corrections.json", Correction
@@ -83,6 +85,7 @@ class Repository:
         self._txn_by_id = {t.id: t for t in self._transactions}
         self._provided_by_txn = {p.transaction_id: p for p in self._provided}
         self._truth_by_txn = {g.transaction_id: g for g in self._truth}
+        self._customer_by_id = {c.id: c for c in self._customers}
 
     @staticmethod
     def _load(path: Path, model: type[T]) -> list[T]:
@@ -91,6 +94,10 @@ class Repository:
     def reload(self) -> Repository:
         """A fresh Repository over the same seed and runtime locations, re-reading the runtime store."""
         return Repository(self._seeds_dir, self._runtime_dir)
+
+    @property
+    def runtime_dir(self) -> Path:
+        return self._runtime_dir
 
     def accounts(self, customer_id: str) -> list[Account]:
         chart = [*self._accounts, *self._runtime_accounts]
@@ -132,3 +139,9 @@ class Repository:
 
     def ground_truth(self) -> dict[str, GroundTruth]:
         return dict(self._truth_by_txn)
+
+    def customer(self, customer_id: str) -> Customer | None:
+        return self._customer_by_id.get(customer_id)
+
+    def customers(self) -> list[Customer]:
+        return list(self._customers)

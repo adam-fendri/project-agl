@@ -22,6 +22,13 @@ settles, given the chart of accounts and the candidate documents in front of it.
 natural-language interpretation of inconsistent strings, which is the one part of the task a rules engine
 cannot do well, so the model is the **primary categorizer and matcher**, not a tie-breaker.
 
+**Scope.** The agent decides two axes — which chart-of-accounts account a transaction belongs to, and which
+document it settles. It does **not** yet decide the BTW/VAT code (rate, deductibility, reverse-charge on the
+EU/non-NL B2B services in this dataset such as AWS, Google, Figma, and Slack); that is a deliberate next
+precision dimension (Part C), not a claim the prototype makes today. The "VAT-sensitivity" weight in the queue
+ranking (A3) is a downstream-impact proxy — the rubriek COSTS/REVENUE weight that flags entries whose
+miscategorisation would distort the VAT return — not a BTW-code decision the agent makes.
+
 **Why.** The brief assigns the decisions to the agent ("the AGENT's decisions, the AGENT's confidence") and
 the hard tail is linguistic: Google Workspace versus Google Ads, freelancer versus salary, asset versus
 office supplies, owner draw versus expense. Those are disambiguated by reading the string and the customer's
@@ -128,8 +135,10 @@ Sign-off requires that every entry be **auditable**: the accountant must see *wh
   is a small, deliberate next step we have not built yet). Override is always available and always cheap.
 - **A full per-transaction trace** reconstructed on demand by the JSON `/trace/{id}` endpoint (context,
   prompt, raw model output, guard verdict, confidence signals, final decision) and rendered in the console's
-  trace drawer. Every entry is reconstructable end to end, which is what "sign off" means for a money system
-  under audit. (Logfire is also wired — env-gated to a project-only token, content scrubbed —
+  trace drawer. What is auditable today is the agent's **decision**, deterministically reconstructable end to end
+  (context, prompt, raw proposal, guard verdict, signals) — the evidence a sign-off rests on. What the
+  prototype does **not** yet record is an immutable log of the **human sign-off / correction event** (who
+  accepted or corrected what, and when); that audit log is the C1 hardening step, not built here. (Logfire is also wired — env-gated to a project-only token, content scrubbed —
   auto-instrumenting the LLM call and spanning the pipeline; dashboards and alerting are the production step.)
 
 ### B2. The entrepreneur gets an answer before the coffee cools
@@ -150,10 +159,18 @@ design splits the two surfaces deliberately by their dominant constraint.
   tool-calling for the entrepreneur (flexible, interactive) is the right interaction pattern per job, which
   is exactly the latency/accuracy/trust trade-off the brief asks us to defend.
 
+**Honest caveat.** This is the latency *argument*, not a measured number. The entrepreneur surface is roadmap
+(Challenge 1), so its coffee-cooling budget is reasoned from the bounded tool-round design, not timed; and even
+the accountant batch path has no measured wall-clock in the committed run — `eval_artifact.json` captures
+correctness, not timing. Measuring both is a Part C step.
+
 ### B3. Neither ever sees the AI confidently get it wrong
 
 False-confidence ("sure and wrong, auto-posted") is the number that kills trust. **Target: zero on
-reconciliation and on any material entry, with a small bounded residual on immaterial categorisation.** It is held by four layers, not one.
+reconciliation and on any material entry, with a small bounded residual on immaterial categorisation.**
+("Material" is a true engine constant — an absolute amount at or above EUR 1,000; the residual
+false-confidence cases here all sit under that line, at EUR 210 or below, and the threshold is an
+accountant-owned, per-customer calibration knob.) It is held by four layers, not one.
 
 1. **Two confidences, not one.** A transaction is two decisions (the account and the match) with different
    evidence and different ways to be wrong. The agent rates each independently. A single number would be
@@ -187,14 +204,23 @@ buys (Part C).
 Capacity 30 to 60 follows from the above, not from a separate trick. The confident bulk auto-posts untouched
 (the labelled split is 81 auto / 16 review / 1 anomaly / 2 request-document), the queue ranking sends the
 accountant's attention to the few uncertain and costly entries, and one correction flips the next same-vendor
-ones immediately (unit-tested on the same-vendor siblings, and the cold→warm lift measures it at about +0.5 (k=3) on the eligible rows).
+ones immediately — the next same-vendor ones (7 eligible here), not literally the next ten of any kind
+(unit-tested on the same-vendor siblings, with the cold→warm lift measuring it at about +0.5 (k=3) on the
+eligible rows). That lift is net +0.57 on the 7 eligible rows in the committed run, and it is net-positive but
+not monotonic: T036 (Albert Heijn, a medium judgment call) regressed from cold-correct to warm-wrong, likely
+k-run non-determinism rather than a clear correction effect.
 **Minutes saved** come from the auto-rate (entries never touched) plus the ranking (attention not wasted on
 the safe bulk): on a worked model — baseline 2.0 min/txn, spot-check 0.2 min, review 1.5 min, 100
 txns/customer/month, 84% auto — the auto-post step saves ~151 min/customer/month and the queue step ~8 min,
 about **2.6 hours saved per customer per month**, of which the auto-post step is ~95% (the throughput lever)
-and the ranking step is the trust lever that holds false-confidence low (DECK Slide 11; `B`, `R`, `V` are
-assumptions, the ~84% auto-rate is the measured input). The auto-rate grows as the correction memory grows,
-which is how the curve continues toward 100+.
+and the ranking step is the trust lever that holds false-confidence low (DECK Slide 12; `B`, `R`, `V` are
+assumptions, the ~84% auto-rate is the measured input). That ~2.6 hours is a roughly 4.8× cut on the
+categorization-plus-reconciliation workflow itself (~200 min/customer/month down to ~41); the 30 to 60
+headline is only 2× because that workflow is one slice of the accountant's job. Reconciling the two needs a
+fourth stated assumption — `F`, the share of per-customer time this workflow represents — alongside `B`, `R`,
+`V`: at `F` of about two-thirds, a 4.8× cut on that slice with the rest unchanged roughly halves total
+per-customer time, which is the 2×. A larger slice or a deeper cut is what carries the curve past 60. The
+auto-rate grows as the correction memory grows, which is how the curve continues toward 100+.
 
 ---
 
@@ -228,12 +254,17 @@ real follow-up "explain" LLM call are the ones explicitly *not* in the prototype
 
 ### C1. What to harden for production
 
+One scope note first: the prototype decides the account axis and the document match; the BTW/VAT code (rate,
+deductibility, reverse-charge on EU/non-NL B2B services) is a deliberate next precision dimension — listed
+below — not something the prototype decides today.
+
 | Area | Today (prototype) | Production hardening |
 |------|-------------------|----------------------|
 | **Ingestion** | JSON seeds loaded by `repository.py` | Real bank/PSD2 feeds, OCR'd documents, and the live ~96% provided-match source, validated at the boundary into the strict models, fail-closed on malformed input. |
 | **Persistence** | In-memory repository over JSON; corrections in a runtime store | The real Postgres on GCP behind the same repository interface; the engine does not change, only the adapter. |
 | **Correction / rule store** | All 5 corrections fit in the prompt | At scale (hundreds of vendors per customer), retrieve the relevant corrections (general always, vendor-filtered) so the prompt stays small; the cost-account guard still enforces that class. |
 | **Confidence calibration** | False-confidence 1–3 (immaterial) on the synthetic set; zero on reconciliation | Calibrate thresholds on a real labeled golden set; tune the high/medium/low bands to hold the named target — zero on material entries and reconciliation, a small bounded residual on immaterial categorisation — before auto-post is enabled. |
+| **BTW-code / reverse-charge** | Not modelled; the agent decides the account axis and the document match only | Add VAT-code classification (rate, deductibility, reverse-charge on EU/non-NL B2B services such as AWS or Google) as a third agent decision with its own confidence gate and guard, calibrated on the golden set before auto-post. |
 | **Security and audit** | Single-customer demo, no auth | Per-customer isolation (multi-tenant), auth/session, secrets management, PII handling, and an immutable audit log of every post, correction, and who signed off. GDPR posture; SOC 2 track. |
 | **Explain** | Deterministic narration of the decision | A real follow-up LLM call for richer, conversational explanation, over the same trace. |
 | **Observability and SLOs** | JSON `/trace/{id}` endpoint + **Logfire wired** (env-gated) | Logfire **dashboards** and **alerting** on false-confidence regressions, drift, and auto-rate drops; dashboards per accountant and per customer. |

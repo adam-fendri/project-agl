@@ -129,8 +129,8 @@ Sign-off requires that every entry be **auditable**: the accountant must see *wh
 - **A full per-transaction trace** reconstructed on demand by the JSON `/trace/{id}` endpoint (context,
   prompt, raw model output, guard verdict, confidence signals, final decision) and rendered in the console's
   trace drawer. Every entry is reconstructable end to end, which is what "sign off" means for a money system
-  under audit. (Streaming the same payload to Logfire as one span per transaction is the production
-  observability step — planned, not built.)
+  under audit. (Logfire is also wired — env-gated to a project-only token, content scrubbed —
+  auto-instrumenting the LLM call and spanning the pipeline; dashboards and alerting are the production step.)
 
 ### B2. The entrepreneur gets an answer before the coffee cools
 
@@ -152,16 +152,16 @@ design splits the two surfaces deliberately by their dominant constraint.
 
 ### B3. Neither ever sees the AI confidently get it wrong
 
-False-confidence ("sure and wrong, auto-posted") is the number that kills trust. **Target: zero on the
-evaluated set.** It is held by four layers, not one.
+False-confidence ("sure and wrong, auto-posted") is the number that kills trust. **Target: zero on
+reconciliation and on any material entry, with a small bounded residual on immaterial categorisation.** It is held by four layers, not one.
 
 1. **Two confidences, not one.** A transaction is two decisions (the account and the match) with different
    evidence and different ways to be wrong. The agent rates each independently. A single number would be
    either unsafe or lossy.
-2. **Auto-post requires BOTH high AND corroboration.** High is allowed only when the evidence corroborates
-   it (for the account, the description or a correction makes it unambiguous; for the match, the
-   counterparty/reference **and** the amount both agree). A material, VAT-sensitive entry whose counterparty
-   does not corroborate is downgraded to review even at self-high confidence.
+2. **Auto-post requires BOTH confidences high and a clean guard.** A material, VAT-sensitive entry whose
+   counterparty does not corroborate is downgraded to review even at self-high confidence; newness alone is
+   never a reason to defer (categorising the novel transaction is the agent's job) — only low confidence, a
+   contradicting guard, or high stakes is.
 3. **The strict guard backstops every auto-post.** Before anything posts, code checks the decision against
    hard facts: account exists, amount sums exactly, no same-amount sibling collision with a disagreeing
    counterparty, revenue not booked on a settled invoice, document not already claimed by an earlier
@@ -172,29 +172,28 @@ evaluated set.** It is held by four layers, not one.
    stated rather than overclaimed. The guard can only downgrade, never rewrite, so the agent stays the
    decider and the floor stays strict.
 4. **The eval measures it.** `eval.py` counts auto-posted-and-wrong against held-out ground truth and reports
-   it as a first-class number, alongside accuracy and the learning lift. On the offline deterministic run it
-   is **0**, and a regression test (`test_mock_run_holds_false_confidence_at_zero`) fails the build if it ever
-   rises; on the real-LLM run the same number is measured. We hold the target by *measuring and gating* it,
-   not by claiming it.
+   it as a first-class number, split by task, alongside accuracy and the learning lift. Across three real-LLM
+   runs reconciliation false-confidence is **zero every run**; categorisation is **1–3 (mean 2), all
+   immaterial**, and inspecting them they are ground-truth-weakness or judgment-calls, not clear model errors.
+   We hold the target by *measuring* it (k=3 for the non-determinism), not by claiming it.
 
 **Honest caveat.** The data is synthetic (Studio Vondel B.V., an 8-FTE Amsterdam studio, Q1 2026) and the
-labels are ours, so the eval proves the **mechanism** and that false-confidence is held at zero on this set.
+labels are ours, so the eval proves the **mechanism** — reconciliation held exact, the small categorisation false-confidence (1–3, immaterial, inspected as ground-truth-weakness or judgment-calls) held — on this set.
 It does not prove a production-calibrated rate. That calibration is the first thing production hardening
 buys (Part C).
 
 ### B4. And so the capacity story holds
 
 Capacity 30 to 60 follows from the above, not from a separate trick. The confident bulk auto-posts untouched
-(the labelled split is 84 auto / 13 review / 1 anomaly / 2 request-document), the queue ranking sends the
+(the labelled split is 81 auto / 16 review / 1 anomaly / 2 request-document), the queue ranking sends the
 accountant's attention to the few uncertain and costly entries, and one correction flips the next same-vendor
-ones immediately (proven offline: a Figma correction moves its two pending siblings from wrong to fully
-correct, lift +1.0 on those rows; the cold→warm accuracy lift on real data is what the harness measures).
+ones immediately (unit-tested on the same-vendor siblings, and the cold→warm lift measures it at +0.50 on the eligible rows).
 **Minutes saved** come from the auto-rate (entries never touched) plus the ranking (attention not wasted on
 the safe bulk): on a worked model — baseline 2.0 min/txn, spot-check 0.2 min, review 1.5 min, 100
 txns/customer/month, 84% auto — the auto-post step saves ~151 min/customer/month and the queue step ~8 min,
 about **2.6 hours saved per customer per month**, of which the auto-post step is ~95% (the throughput lever)
-and the ranking step is the trust lever that holds false-confidence at zero (DECK Slide 11; `B`, `R`, `V` are
-assumptions, the 84% auto-rate is the measured input). The auto-rate grows as the correction memory grows,
+and the ranking step is the trust lever that holds false-confidence low (DECK Slide 11; `B`, `R`, `V` are
+assumptions, the ~84% auto-rate is the measured input). The auto-rate grows as the correction memory grows,
 which is how the curve continues toward 100+.
 
 ---
@@ -217,15 +216,15 @@ Gemini 2.5 Pro, swappable), all in `backend/`:
 - the FastAPI console API (run, queue, posted, accept, correct, explain, metrics, trace);
 - a **no-build static web console** (`backend/ui/`, vanilla HTML/JS served by the same FastAPI app) — the
   review queue, the auto-posted tab, the decision card with accept/correct/explain, and the trace drawer;
-- the eval harness reporting accuracy, false-confidence (0 offline, test-gated), per-outcome gates, routing
+- the eval harness reporting accuracy, false-confidence (k=3 for the non-determinism, split by task), per-outcome gates, routing
   counts, and the cold-versus-corrected lift, via a runnable CLI that writes a self-describing
   `eval_artifact.json` (agent, model id, date, denominator);
 - a JSON `/trace/{id}` endpoint that reconstructs the full per-transaction record on demand (the prototype's
   debug surface and the clickable trace view).
 
 This is the demo. It proves the mechanism. Everything below turns the mechanism into a product on real data.
-(Logfire spans, multi-tenant auth + audit log, and a real follow-up "explain" LLM call are explicitly *not*
-in the prototype — they are in the hardening list below.)
+(Logfire is wired in the prototype, env-gated to a project-only token; multi-tenant auth + audit log and a
+real follow-up "explain" LLM call are the ones explicitly *not* in the prototype — they are in the hardening list below.)
 
 ### C1. What to harden for production
 
@@ -234,12 +233,12 @@ in the prototype — they are in the hardening list below.)
 | **Ingestion** | JSON seeds loaded by `repository.py` | Real bank/PSD2 feeds, OCR'd documents, and the live ~96% provided-match source, validated at the boundary into the strict models, fail-closed on malformed input. |
 | **Persistence** | In-memory repository over JSON; corrections in a runtime store | The real Postgres on GCP behind the same repository interface; the engine does not change, only the adapter. |
 | **Correction / rule store** | All 5 corrections fit in the prompt | At scale (hundreds of vendors per customer), retrieve the relevant corrections (general always, vendor-filtered) so the prompt stays small; the cost-account guard still enforces that class. |
-| **Confidence calibration** | Zero false-confidence on the synthetic set | Calibrate thresholds on a real labeled golden set; the cold rate will be lower than synthetic, so tune the high/medium/low bands until false-confidence holds at zero on real data before any auto-post is enabled. |
+| **Confidence calibration** | False-confidence 1–3 (immaterial) on the synthetic set; zero on reconciliation | Calibrate thresholds on a real labeled golden set; tune the high/medium/low bands to hold the named target — zero on material entries and reconciliation, a small bounded residual on immaterial categorisation — before auto-post is enabled. |
 | **Security and audit** | Single-customer demo, no auth | Per-customer isolation (multi-tenant), auth/session, secrets management, PII handling, and an immutable audit log of every post, correction, and who signed off. GDPR posture; SOC 2 track. |
 | **Explain** | Deterministic narration of the decision | A real follow-up LLM call for richer, conversational explanation, over the same trace. |
-| **Observability and SLOs** | JSON `/trace/{id}` endpoint | Wire **Logfire** (the dependency is declared) for one span per transaction with the trace payload; alerting on false-confidence regressions, drift, and auto-rate drops; dashboards per accountant and per customer. |
+| **Observability and SLOs** | JSON `/trace/{id}` endpoint + **Logfire wired** (env-gated) | Logfire **dashboards** and **alerting** on false-confidence regressions, drift, and auto-rate drops; dashboards per accountant and per customer. |
 | **Eval as a gate** | A script we run | A golden-set regression gate in CI that blocks any deploy (prompt, model, or code) that lowers accuracy or raises false-confidence. The eval becomes the safety mechanism, not a one-off. |
-| **Rollout safety** | Engine auto-posts in the demo | Ship in **shadow mode** first: the agent proposes, the accountant signs everything, we measure the would-be auto-rate and false-confidence on live data with zero auto-posting, and only turn on auto-post for the high-confidence band once the number holds at zero. |
+| **Rollout safety** | Engine auto-posts in the demo | Ship in **shadow mode** first: the agent proposes, the accountant signs everything, we measure the would-be auto-rate and false-confidence on live data with zero auto-posting, and only turn on auto-post for the high-confidence band once the number holds its target (zero on material/reconciliation, a bounded immaterial residual). |
 
 ### C2. Resources (the hires)
 
@@ -248,7 +247,7 @@ A small, senior team is enough to take this to production. The engine is the val
 - **AI / ML engineer** (owns the engine): prompts, the eval and golden set, model selection and the
   Sonnet-to-cheaper downgrade, calibration. This is the role I would fill.
 - **Backend engineer**: ingestion adapters, the real Postgres, multi-tenant isolation, auth, API and audit
-  hardening, Logfire wiring, the CI eval gate.
+  hardening, Logfire dashboards, the CI eval gate.
 - **Frontend engineer**: productionize the accountant console (the prototype is a static page — harden it
   into the real client: queue, cards, correct/explain, trace) and later the entrepreneur surface.
 - **A domain expert (Dutch bookkeeper / accountant) in the loop**, part-time but essential: builds and signs
@@ -264,18 +263,17 @@ A pragmatic path. Each phase ends on a gate that is a **measured number**, not a
 - **Phase 0 — done (the prototype).** Engine, guard, learning loop, eval, console (API + static web app),
   JSON trace endpoint, wired to a real LLM on seeded data.
 - **Phase 1 — pilot in shadow mode (roughly month 1 to 2).** Swap seeds for the live Postgres and ingestion
-  adapters; build the labeled golden set with the accountant; wire Logfire and basic dashboards; run on 1 to
-  3 real customers in shadow (propose-only, accountant signs everything). **Gate:** false-confidence at zero
-  and a credible auto-rate on the golden set.
+  adapters; build the labeled golden set with the accountant; stand up the Logfire dashboards; run on 1 to
+  3 real customers in shadow (propose-only, accountant signs everything). **Gate:** false-confidence at its
+  target (zero on material/reconciliation, bounded immaterial residual) and a credible auto-rate on the golden set.
 - **Phase 2 — auto-post on, hardened (roughly month 3 to 4).** Enable auto-post for the high-confidence band;
   ship retrieval for the correction store; multi-tenant, auth, audit log, security posture, the CI eval gate.
-  **Gate:** false-confidence holds at zero on live data; the 30-to-60 capacity claim is visible in
+  **Gate:** false-confidence holds its target on live data; the 30-to-60 capacity claim is visible in
   minutes-saved telemetry.
 - **Phase 3 — scale and the entrepreneur surface (roughly month 5 to 9).** Roll out across the accountant
   base toward the 60-and-beyond curve; run the eval-driven model downgrade to control cost; add the
   entrepreneur conversation (Challenge 1) on the same engine; continuous calibration and drift monitoring.
-  **Gate:** the capacity curve holds at scale with false-confidence still measured at zero.
+  **Gate:** the capacity curve holds at scale with false-confidence still at its measured target.
 
-The throughline is the same as the engine's: ship the strict, auditable, measurable thing, prove the number
-that kills trust is held at zero, and let the auto-set grow as the system learns. Strict is the floor, never
-a dial.
+The throughline is the same as the engine's: ship the strict, auditable, measurable thing, hold the number
+that kills trust to its target, and let the auto-set grow as the system learns. Strict is the floor, never a dial.

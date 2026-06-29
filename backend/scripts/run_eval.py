@@ -110,9 +110,11 @@ def _per_decision(warm: list[Decision], truth: dict[str, GroundTruth]) -> list[d
             {
                 "transaction_id": decision.transaction_id,
                 "account": decision.account,
+                "account_reasoning": decision.account_reasoning,
                 "gt_account": gt.account,
                 "account_correct": account_correct,
                 "match": decision.match,
+                "match_reasoning": decision.match_reasoning,
                 "gt_match": gt.match,
                 "match_correct": match_correct,
                 "outcome": decision.outcome.value,

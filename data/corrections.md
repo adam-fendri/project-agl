@@ -5,11 +5,12 @@ has them as memory from the start. Each one is not a one-off fix: it establishes
 that should move every matching transaction (the brief's "one correction moves the next 10").
 
 ## How to read the impact
-- **Cold agent** (ignores corrections): 84 AUTO / 14 REVIEW / 2 ANOMALY (see transactions.md).
-- **With these 5 corrections applied:** 8 of the 14 REVIEW cases become confident ->
-  **92 AUTO / 6 REVIEW / 2 ANOMALY.**
-- That **84% -> 92%** lift IS the measurable demonstration of learning. The eval reports
-  both numbers. A live correction in the demo pushes it further.
+- Each correction is a rule that should move its matching transactions from REVIEW to a confident
+  AUTO post; the cold (corrections-suppressed) versus warm (corrections-applied) eval runs measure that.
+- The eval reports the cold->warm lift on the eligible rows (the transactions a correction actually
+  moves) — about +0.5 across runs; a live correction in the demo pushes it further.
+- This is the measurable demonstration of learning, measured per run by the harness, not asserted
+  as a fixed number.
 - Honest note on "next 10": in this single quarter each rule moves 1-2 transactions; the
   rule generalises to ALL future matching transactions, which over a year is >10. The
   mechanism scales; the quarter is just the sample.

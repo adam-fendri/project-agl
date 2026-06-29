@@ -255,24 +255,24 @@ source of truth the deliverables (DECK, ARCHITECTURE, ASSUMPTIONS_AND_TIMELINE) 
 - **`explain` is deterministic narration, not an LLM call.** `Console.explain` -> `_narrate` builds a
   sentence over the card's own fields; it is sync, with no model call. Relabelled everywhere as deterministic
   narration; a real follow-up LLM call is named as the next step (corrects D7/D10, review M1).
-- **No Logfire is wired.** The prototype's observability is the JSON `/trace/{id}` endpoint (reconstructed on
-  demand, rendered in the trace drawer, read by the eval). Logfire is described as the production plan, never
-  as "done" (corrects D4/D9, review C5).
-- **False-confidence is HELD at 0 and gated by a test.** The guard gained a same-amount-collision check, a
-  revenue-on-settled-invoice check, and a fingerprint-duplicate check; the router downgrades material x
-  VAT-sensitive x uncorroborated posts. Offline run = 0; `test_mock_run_holds_false_confidence_at_zero` fails
-  the build if it rises. On the real-LLM run the same number is measured (review C3).
+- **Logfire IS wired** (env-gated to a project-only token, content scrubbed, off by default): it
+  auto-instruments the LLM call, wraps `claude -p`, and spans the pipeline. The JSON `/trace/{id}` endpoint
+  (reconstructed on demand, rendered in the trace drawer, read by the eval) sits beside it; production =
+  dashboards + alerting (corrects D4/D9, review C5).
+- **False-confidence is held to its target and measured per run.** The guard gained a same-amount-collision
+  check, a revenue-on-settled-invoice check, and a fingerprint-duplicate check; the router downgrades
+  material x VAT-sensitive x uncorroborated posts. Reconciliation and material entries are zero every run;
+  categorisation is 1-3 (k=3), all immaterial. The eval reports it split by task on every run (review C3).
 - **"Every correction is backstopped" scoped to the cost-account class.** The guard enforces vendor->cost
   (rubriek 4) corrections; asset/owner-draw conventions and match re-points defer via the confidence gate +
   eval, not the guard. Deliverables state this boundary (corrects review M7).
-- **No fixed eval result is asserted.** Reproducible offline baseline (MockAgent, all 100, 2026-06-28):
-  false-confidence 0; routing 18 auto / 81 review / 1 anomaly; categorization 40% (naive baseline the real
-  LLM must beat); match 90% (circular — the mock copies the provided match). The real-LLM run
+- **Eval numbers are carried by the committed artifact, k=3.** The real-LLM run
   (`scripts/run_eval.py --agent claude`) writes a self-describing `eval_artifact.json` (agent, model id,
-  date, denominator); its categorization/match/lift figures are targets the harness measures, cited only
-  once the committed artifact carries them — never asserted as produced numbers in prose (review C4).
-- **GT outcome split is 84 auto / 13 review / 1 anomaly / 2 request-document** (not "84/14/2", not "two
-  anomalies"): the single anomaly is the duplicate, the two requests are the material missing-document cases.
+  date, denominator); the committed run shows categorisation 0.95, reconciliation 25/25, 85 auto,
+  false-confidence 1, lift +0.57 — within the deck's k=3 ranges. The earlier MockAgent baseline was
+  removed; the eval runs the real LLM only (review C4).
+- **GT outcome split is 81 auto / 16 review / 1 anomaly / 2 request-document** (not "two anomalies"): the
+  single anomaly is the duplicate, the two requests are the material missing-document cases.
 - **Minutes saved is a MODEL with stated inputs** (DECK Slide 11), not a measured result: the auto-rate is
-  the measured input (84% on this set), the per-task minutes are assumptions; the auto-post step dominates
-  the minutes, the queue-ranking step holds false-confidence at zero (answers review M8).
+  the measured input (~84% on this set, k=3), the per-task minutes are assumptions; the auto-post step dominates
+  the minutes, the queue-ranking step holds false-confidence low (answers review M8).

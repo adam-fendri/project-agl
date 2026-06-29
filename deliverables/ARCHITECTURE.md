@@ -27,7 +27,7 @@ flowchart TB
     REPO --> GROUND
     MEM --> GROUND
 
-    ROUTE -->|both confidences HIGH<br/>guard passed · corroborated| AUTO["Auto-posted set<br/>reasoning visible · spot-check only"]
+    ROUTE -->|both confidences HIGH<br/>guard passed| AUTO["Auto-posted set<br/>reasoning visible · spot-check only"]
     ROUTE -->|low confidence OR<br/>guard downgraded| QUEUE
     ROUTE -->|anomaly| QUEUE
     ROUTE -->|material doc missing| REQ["Request from entrepreneur"]
@@ -42,12 +42,12 @@ flowchart TB
     CARD -->|correct → apply_correction| MEM
     MEM -->|pending_reruns · re-run same-vendor siblings| GROUND
 
-    DECIDE -. rebuilt on demand .-> OBS["JSON /trace endpoint + eval<br/>accuracy · false-confidence held 0 (test-gated) · cold→warm lift<br/>(Logfire spans = production plan, not built)"]
+    DECIDE -. rebuilt on demand .-> OBS["JSON /trace (deterministic) · Logfire (env-gated, project token) · eval<br/>accuracy · false-confidence 1–3 (k=3, all immaterial) · cold→warm lift"]
     GUARD -. .-> OBS
 ```
 
 **Topology (single-pass).** Each transaction flows `ground → decide → guard → route` exactly once
-(`engine.process`). No agentic loop: the per-transaction flow is fixed, so we orchestrate it
+(`engine.run_batch`, run as a two-pass batch — decide all, resolve `settled_by`, then finalize, so a duplicate is the later claimant regardless of order). No agentic loop: the per-transaction flow is fixed, so we orchestrate it
 ourselves and reserve tool-calling for the entrepreneur side. The agent makes one temperature-0
 structured-output call (`agent.decide`, via pydantic-ai) and returns a typed `Proposal` carrying
 **two** confidences — one for the account, one for the match — because a transaction is two decisions
@@ -87,10 +87,12 @@ IBAN). The committed `seeds/` are read-only; learned corrections are written to 
 from the vendor the agent already identified, writes it to that store, and **re-runs the pending
 same-vendor transactions** (`learning.pending_reruns`) so one edit moves the next ones — closing the
 loop back into grounding, with the strict guard backstopping the vendor→cost-account class on any
-retrieval miss. Observability in the prototype is a **JSON `/trace/{id}` endpoint** that reconstructs
-the full per-transaction record on demand (grounded context, exact prompt, raw `Proposal`, guard
-verdict, confidence signals, final decision); the console's trace drawer renders it, and the eval reads
-the same structure to report accuracy, false-confidence (held at 0 on the offline run and gated by a
-regression test), and the cold→warm learning lift. **Logfire spans, one per transaction, are the
-production observability plan** (the dependency is declared) — they are not wired in the prototype, and
-this document does not claim they are.
+retrieval miss. Observability has two layers. The **JSON `/trace/{id}` endpoint** reconstructs the full
+per-transaction record on demand (grounded context, exact prompt, raw `Proposal`, guard verdict,
+confidence signals, final decision) — deterministic, so it never drifts; the console's trace drawer
+renders it. And **Logfire is wired** (env-gated to this project's own token, content scrubbed): it
+auto-instruments the agent's LLM call (model, tokens, latency, retries), wraps the `claude -p` path in a
+span, and spans the pipeline (`run_batch` / `decide` / `finalize`, carrying outcome, guard verdict, and
+the two confidences) — off by default, exporting only when a project token is set. The eval reads the
+same decision structure to report per-task accuracy, **false-confidence (measured at 1–3 across three
+runs on the grounded set — all immaterial; never claimed to be 0)**, and the cold→warm learning lift.

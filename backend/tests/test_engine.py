@@ -192,3 +192,12 @@ def test_agent_failure_fails_closed_to_review_without_aborting_batch(repo: Repos
 
     assert decisions["T003"].outcome is Outcome.AUTO_POST
     assert len(decisions) == len(repo.transactions(CUSTOMER))
+
+
+def test_decision_carries_vat_treatment_from_account(repo: Repository) -> None:
+    agent = _ScriptedAgent(matches={}, accounts={"T003": "4300", "T005": "4600"})
+
+    decisions = _decisions(agent, repo)
+
+    assert decisions["T003"].vat_treatment == "standard"
+    assert decisions["T005"].vat_treatment == "reduced"

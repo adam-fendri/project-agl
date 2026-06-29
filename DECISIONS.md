@@ -109,10 +109,11 @@ WHY: the PDF's observability bullet is "how you DEBUG your agentic flows" -> the
 debug tool; AND the Logfire UI is a clickable per-transaction trace viewer -> that's the BONUS trace
 view ~free (point the deck at a real Logfire trace). One artifact, both jobs. (Reuse, not anchor:
 the DESIGN was decided on the challenge's merits; Logfire is just the right, familiar tool to build it.)
-REALITY (post-build): Logfire is NOT wired in the prototype (the dependency is declared but never imported
-or configured). The prototype's observability is the JSON `/trace/{id}` endpoint that reconstructs the full
-record on demand (rendered in the console's trace drawer). Logfire — one span/txn with that same payload —
-is the production observability step, stated as roadmap, not claimed as built (see D12).
+REALITY (post-build): Logfire IS wired — env-gated to a project-only token (`AGL_LOGFIRE_TOKEN`; any ambient
+token is dropped so no other project's credentials are used), content scrubbed, off by default. It
+auto-instruments the pydantic-ai call, wraps the `claude -p` path, and spans the pipeline
+(`run_batch`/`decide`/`finalize`). The JSON `/trace/{id}` endpoint reconstructs the full record on demand
+(the console's trace drawer); Logfire is the queryable backend beside it. Production = dashboards + alerting.
 
 ## D10 — Agent interaction pattern: SINGLE-PASS (the AGENT decides once on grounded evidence; code grounds + guards). Concretizes D4.
 The real distinction between the candidates = does the LLM RE-ENGAGE with computed results (a loop) or not?
@@ -183,9 +184,9 @@ DELIVERABLE CONTENT TO WRITE (not new system decisions, go in the deck/diagram):
   scale the rule store, hires, rough timeline).
 DATA NOTE: hardening descriptions can lower the cold confident rate -> tune data so corrections + recurring
   vendors still land the 90%+ beat. The "cold ~84 -> ~92" figure is an ILLUSTRATIVE DESIGN TARGET, never a
-  produced result: the lift MECHANISM is proven offline (a Figma correction moves its 2 siblings, +1.0 on
-  those rows), and the cold->warm accuracy figure is harness-measured per run (model id + date in
-  `eval_artifact.json`); do not state 84->92 as a measured number anywhere (see D12).
+  produced result: the lift MECHANISM is unit-tested (a correction moves its same-vendor siblings), and the
+  cold->warm accuracy figure is harness-measured per run, k=3 (about +0.5 on the eligible rows; model id +
+  date in `eval_artifact.json`); do not state 84->92 as a measured number anywhere (see D12).
 TIME/PRIORITY: ESSENTIAL first = engine + eval + functional console + deliverables. OPTIONAL upside =
   Challenge 1 entrepreneur chat (3rd bonus, same engine) + heavy UI polish.
 
@@ -215,19 +216,16 @@ data and true. `build_seeds.py` now asserts each invariant below and prints the 
   missing counterpart defers to REVIEW; a MATERIAL missing document triggers a deliberate
   REQUEST_DOCUMENT (ask the entrepreneur). T049 (EUR4,500 builder, no bill) and T096 (cites
   invoice 99213, no bill) are labelled `request_document`; the lone anomaly is now T046 (the
-  duplicate). Outcomes: 84 auto / 13 review / 1 anomaly / 2 request_document.
+  duplicate). Outcomes: 81 auto / 16 review / 1 anomaly / 2 request_document.
 - **Minors.** Bills B-04/B-05 are repurposed to two **UNPAID** open payables (18 paid / 2 open AP),
   so "some were already paid" is true and the studio has realistic accounts payable; their former
   Adobe/Figma Jan direct debits (T003/T004) now carry no bill match, like the other recurring-SaaS
   months. Counterparty truncation artifacts ("KASA TECH .", "BRIGHTSEED .") are fixed in
   `_abbrev` (trailing separators stripped after suffix removal and truncation).
 
-CROSS-FILE IMPLICATIONS (not changed here, flagged for the owners): `agent.py` MockAgent still books
-inflows to 8000 (`_REVENUE_ACCOUNT`); it now disagrees with GT 1300 on the 7 inflows, but it rates
-inflows LOW confidence so they route to review, NOT auto-post — so this lowers only the naive mock's
-categorization accuracy (a realistic baseline error the real LLM must beat), it does NOT create
-false-confidence. `eval.py` counts `request_document` routing but does not yet score its
-precision/recall — an eval enhancement outside this data-layer change.
+CROSS-FILE NOTE: the eval scores `request_document` precision/recall in the per-outcome gates, and the
+MockAgent baseline referenced in earlier drafts was removed — the eval runs the real LLM only
+(`--agent claude` or `--agent llm`).
 
 ## CORRECTNESS PRINCIPLE + open items (after the agent-decides realignment of D2/D5/D10)
 PRINCIPLE: this is a MONEY system -> CORRECT by default; STRICT is the floor, not a dial. Zero-tolerance:

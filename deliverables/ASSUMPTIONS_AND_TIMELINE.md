@@ -187,7 +187,7 @@ buys (Part C).
 Capacity 30 to 60 follows from the above, not from a separate trick. The confident bulk auto-posts untouched
 (the labelled split is 81 auto / 16 review / 1 anomaly / 2 request-document), the queue ranking sends the
 accountant's attention to the few uncertain and costly entries, and one correction flips the next same-vendor
-ones immediately (unit-tested on the same-vendor siblings, and the cold→warm lift measures it at +0.50 on the eligible rows).
+ones immediately (unit-tested on the same-vendor siblings, and the cold→warm lift measures it at about +0.5 (k=3) on the eligible rows).
 **Minutes saved** come from the auto-rate (entries never touched) plus the ranking (attention not wasted on
 the safe bulk): on a worked model — baseline 2.0 min/txn, spot-check 0.2 min, review 1.5 min, 100
 txns/customer/month, 84% auto — the auto-post step saves ~151 min/customer/month and the queue step ~8 min,

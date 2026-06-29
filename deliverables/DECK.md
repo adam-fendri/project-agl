@@ -71,7 +71,7 @@ The accountant corrects on the card, in plain language. No coding.
 
 - **The fix is a dropdown:** pick the right account, or re-point the match. The system builds the correction by joining the **vendor the agent already identified** (a canonical key, never the raw IBAN) with the accountant's pick.
 - **Corrections are written to a runtime store, not the seed.** The committed fixtures stay read-only; a money system does not mutate its own data as runtime state. From then on the relevant corrections are pulled into the agent's evidence, and the agent applies them by reasoning.
-- **It moves the next ones immediately.** The system re-runs the pending same-vendor transactions so they flip on the spot ("N similar re-run"), instead of only fixing the one in front of the accountant. Proven two ways: a unit test (`test_lift_report_measures_correction_gain_on_eligible_rows`) asserts the same-vendor siblings move, and the eval's cold→warm lift measures it end-to-end at **+0.50** on the eligible rows.
+- **It moves the next ones immediately.** The system re-runs the pending same-vendor transactions so they flip on the spot ("N similar re-run"), instead of only fixing the one in front of the accountant. Proven two ways: a unit test (`test_lift_report_measures_correction_gain_on_eligible_rows`) asserts the same-vendor siblings move, and the eval's cold→warm lift measures it end-to-end at **about +0.5** (k=3) on the eligible rows.
 - **The guard backstops the cost-account class.** If retrieval ever drops a vendor→cost-account correction, the guard still enforces it, so that known fix is never silently lost. (Asset/owner-draw conventions and match re-points are not in that class — they defer to review rather than auto-post.)
 - **It stays small at scale.** General accounting lessons live in the prompt always (few of them); vendor-specific corrections are filtered by vendor so the prompt does not bloat as corrections grow.
 
@@ -132,7 +132,7 @@ A **model** with stated inputs (replace with telemetry), not a measured producti
 
 - **Capacity 30 to 60:** the accountant only touches the uncertain few and the anomalies; the confident bulk auto-posts; the queue ranking sends attention where a mistake is both likely and costly (Slide 11).
 - **False confidence held low:** zero on reconciliation and material entries; a small, measured, immaterial residual on categorisation (1–3 of 100, k=3) — held by grounding + the guard + calibration + the human, measured every run.
-- **Learning:** one correction moves the next same-vendor ones, re-run live; the mechanism is unit-tested, and the cold→warm lift measures it at **+0.50** on the eligible rows.
+- **Learning:** one correction moves the next same-vendor ones, re-run live; the mechanism is unit-tested, and the cold→warm lift measures it at **about +0.5** (k=3) on the eligible rows.
 
 **Stated assumptions.**
 

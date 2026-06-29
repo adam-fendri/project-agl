@@ -24,12 +24,13 @@ export function AccountPicker({
 }: {
   current: string;
   busy: boolean;
-  onSubmit: (number: string) => void;
+  onSubmit: (number: string, note: string) => void;
   onCancel: () => void;
 }) {
   const { accounts } = useAppData();
   const [query, setQuery] = useState("");
   const [picked, setPicked] = useState(current);
+  const [note, setNote] = useState("");
 
   const groups = RUBRIEK_ORDER.map((rubriek) => ({
     rubriek,
@@ -78,6 +79,26 @@ export function AccountPicker({
         ))}
       </div>
 
+      <div style={{ marginTop: 14 }}>
+        <label style={{ display: "block", fontSize: 12.5, color: "#6b7280", marginBottom: 6 }}>
+          Why? (optional) — saved with the rule and shown to the agent on this vendor's future lines
+        </label>
+        <input
+          type="text"
+          value={note}
+          onChange={(event) => setNote(event.target.value)}
+          placeholder="e.g. recurring software subscription, always Software"
+          style={{
+            width: "100%",
+            padding: "8px 11px",
+            border: "1px solid #d7d2c4",
+            borderRadius: 6,
+            fontSize: 14,
+            boxSizing: "border-box",
+          }}
+        />
+      </div>
+
       <div className="panel__foot">
         <button type="button" className="btn btn--ghost" onClick={onCancel} disabled={busy}>
           Cancel
@@ -85,7 +106,7 @@ export function AccountPicker({
         <button
           type="button"
           className="btn btn--primary"
-          onClick={() => onSubmit(picked)}
+          onClick={() => onSubmit(picked, note)}
           disabled={busy || picked === current}
         >
           {busy && <Spinner size={14} />}

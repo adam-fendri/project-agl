@@ -132,7 +132,7 @@ export function ActionBar({ decision }: { decision: Decision }) {
           current={decision.account}
           busy={busy}
           onCancel={() => setPanel("none")}
-          onSubmit={(number) => run(() => correct(id, { corrected_account: number }))}
+          onSubmit={(number, note) => run(() => correct(id, { corrected_account: number, note }))}
         />
       )}
       {panel === "match" && (

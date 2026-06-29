@@ -56,6 +56,7 @@ _HANDLE_ACTION: dict[Outcome, str] = {
 class CorrectRequest(BaseModel):
     corrected_account: str | None = None
     corrected_match: list[str] | None = None
+    note: str = ""
 
 
 class CorrectResponse(BaseModel):
@@ -319,12 +320,13 @@ class Console:
         txn_id: str,
         corrected_account: str | None,
         corrected_match: list[str] | None,
+        note: str = "",
     ) -> CorrectResponse:
         async with self._lock:
             decision = self.decision(txn_id)
             try:
                 correction = apply_correction(
-                    self._repo, txn_id, corrected_account, corrected_match, vendor=decision.vendor
+                    self._repo, txn_id, corrected_account, corrected_match, vendor=decision.vendor, note=note
                 )
             except ValueError as e:
                 raise HTTPException(status_code=422, detail=str(e)) from e
@@ -543,7 +545,7 @@ async def handle_transaction(transaction_id: str) -> HandledRecord:
 @app.post("/transaction/{transaction_id}/correct")
 async def correct_transaction(transaction_id: str, body: CorrectRequest) -> CorrectResponse:
     """Apply the accountant's correction and re-run the pending similar transactions."""
-    return await _console.correct(transaction_id, body.corrected_account, body.corrected_match)
+    return await _console.correct(transaction_id, body.corrected_account, body.corrected_match, body.note)
 
 
 @app.post("/account")

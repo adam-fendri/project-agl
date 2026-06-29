@@ -148,6 +148,7 @@ export interface CorrectResponse {
 export interface CorrectRequest {
   corrected_account?: string;
   corrected_match?: string[];
+  note?: string;
 }
 
 export interface AssignAccountRequest {

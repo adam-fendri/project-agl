@@ -85,6 +85,7 @@ def apply_correction(
     corrected_account: str | None,
     corrected_match: list[str] | None,
     vendor: str | None = None,
+    note: str = "",
 ) -> Correction:
     """Persist a correction to the runtime store, keyed on the vendor the agent identified.
 
@@ -124,7 +125,7 @@ def apply_correction(
         vendor=vendor_key,
         corrected_account=corrected_account,
         corrected_match=match_rule,
-        note="",
+        note=note,
         created_at=datetime.now(),
     )
     repo.store.append(correction)

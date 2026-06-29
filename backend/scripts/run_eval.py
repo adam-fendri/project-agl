@@ -95,7 +95,7 @@ def _eligible_rows(
     return rows
 
 
-def _per_decision(warm: list[Decision], truth: dict[str, GroundTruth]) -> list[dict[str, object]]:
+def per_decision(warm: list[Decision], truth: dict[str, GroundTruth]) -> list[dict[str, object]]:
     """Per-decision diagnostic rows scored against ground truth, so the artifact alone reveals which
     transactions are false-confidence, anomaly false positives, or otherwise wrong.
     """
@@ -190,7 +190,7 @@ async def run(args: argparse.Namespace) -> EvalReport:
         "eligible_rows": _eligible_rows(
             cold_result.decisions, warm_result.decisions, truth, report.eligible_ids
         ),
-        "per_decision": _per_decision(warm_result.decisions, truth),
+        "per_decision": per_decision(warm_result.decisions, truth),
     }
 
     out = Path(args.out)

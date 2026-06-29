@@ -9,7 +9,7 @@ from agl.models import (
     MatchStatus,
     Outcome,
 )
-from scripts.run_eval import _per_decision
+from scripts.run_eval import per_decision
 
 
 def _decision(
@@ -51,7 +51,7 @@ def test_per_decision_filters_to_truth_and_sorts_by_id() -> None:
         "T002": _truth("T002", "4300", ["INV-1"], Outcome.AUTO_POST),
     }
 
-    rows = _per_decision(decisions, truth)
+    rows = per_decision(decisions, truth)
 
     assert [row["transaction_id"] for row in rows] == ["T001", "T002"]
 
@@ -74,7 +74,7 @@ def test_per_decision_flags_false_confidence_anomaly_fp_and_correct_row() -> Non
         "T003": _truth("T003", "4100", [], Outcome.REVIEW),
     }
 
-    by_id = {row["transaction_id"]: row for row in _per_decision(decisions, truth)}
+    by_id = {row["transaction_id"]: row for row in per_decision(decisions, truth)}
 
     wrong_account = by_id["T001"]
     assert wrong_account["account_correct"] is False

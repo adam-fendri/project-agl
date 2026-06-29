@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import shutil
 import tempfile
 from collections.abc import Generator
@@ -10,15 +9,12 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from agl.engine import decide, finalize
+from agl.engine import run_batch
 from agl.models import (
     AgentProtocol,
     Decision,
-    Evidence,
     GroundTruth,
     Outcome,
-    Proposal,
-    Transaction,
 )
 from agl.repository import SEEDS, Repository
 
@@ -243,6 +239,12 @@ class BatchResult:
     failed: list[str]
 
 
+def _batch_result(decisions: list[Decision]) -> BatchResult:
+    """Tag the fail-closed decisions (those the agent could not produce, signalled ``agent_error``) as failed."""
+    failed = [d.transaction_id for d in decisions if "agent_error" in d.confidence_signals]
+    return BatchResult(decisions=decisions, failed=failed)
+
+
 class LiftHarness:
     """Runs the batch twice — corrections suppressed (cold) then applied (warm) — to measure learning lift.
 
@@ -269,46 +271,11 @@ class LiftHarness:
         self._retries = retries
 
     async def cold_and_warm(self, subset: set[str] | None = None) -> tuple[BatchResult, BatchResult]:
-        warm = await self._batch(self._repo, subset)
+        warm = await run_batch(
+            self._repo, self._agent, self._customer, subset, self._concurrency, self._retries
+        )
         with corrections_suppressed(self._seeds_dir) as cold_repo:
-            cold = await self._batch(cold_repo, subset)
-        return cold, warm
-
-    async def _batch(self, repo: Repository, subset: set[str] | None) -> BatchResult:
-        selected = [t for t in repo.transactions(self._customer) if subset is None or t.id in subset]
-        semaphore = asyncio.Semaphore(self._concurrency)
-
-        async def _bounded(txn: Transaction) -> tuple[Evidence, Proposal] | None:
-            async with semaphore:
-                return await self._decide_one(repo, txn)
-
-        decided = await asyncio.gather(*(_bounded(txn) for txn in selected))
-
-        settled_by: dict[str, list[str]] = {}
-        for txn, item in zip(selected, decided, strict=True):
-            if item is None:
-                continue
-            _evidence, proposal = item
-            for doc_id in proposal.match:
-                settled_by.setdefault(doc_id, []).append(txn.id)
-
-        decisions: list[Decision] = []
-        failed: list[str] = []
-        for txn, item in zip(selected, decided, strict=True):
-            if item is None:
-                failed.append(txn.id)
-                continue
-            evidence, proposal = item
-            decisions.append(finalize(txn, repo, evidence, proposal, settled_by))
-        return BatchResult(decisions=decisions, failed=failed)
-
-    async def _decide_one(
-        self, repo: Repository, txn: Transaction
-    ) -> tuple[Evidence, Proposal] | None:
-        for attempt in range(self._retries + 1):
-            try:
-                return await decide(txn, repo, self._agent)
-            except Exception:
-                if attempt == self._retries:
-                    return None
-        return None
+            cold = await run_batch(
+                cold_repo, self._agent, self._customer, subset, self._concurrency, self._retries
+            )
+        return _batch_result(cold), _batch_result(warm)

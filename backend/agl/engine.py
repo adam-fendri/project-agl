@@ -96,25 +96,34 @@ def _failed_decision(txn: Transaction) -> Decision:
     )
 
 
-async def run_batch(repo: Repository, agent: AgentProtocol, customer_id: str) -> list[Decision]:
-    """Decide every transaction concurrently, then finalize each against the full settlement map.
+async def run_batch(
+    repo: Repository,
+    agent: AgentProtocol,
+    customer_id: str,
+    subset: set[str] | None = None,
+    concurrency: int = _CONCURRENCY,
+    retries: int = _RETRIES,
+) -> list[Decision]:
+    """Decide every transaction (or a subset) concurrently, then finalize each against the full settlement map.
 
-    PASS 1 grounds and decides each transaction independently, bounded by a semaphore, with no shared
-    state. PASS 2 builds ``settled_by`` (doc id -> the transaction ids that matched it) over every
-    proposal, then finalizes each transaction, so a duplicate is the later claimant of a shared
+    The single batch path shared by the live console and the eval. PASS 1 grounds and decides each
+    transaction independently, bounded by a semaphore and retried; it is fail-closed: a transaction whose
+    agent call keeps failing or returns invalid output yields no proposal and is routed to review rather than
+    aborting the run or being dropped. PASS 2 builds ``settled_by`` (doc id -> the transaction ids that matched
+    it) over every resolved proposal, then finalizes each, so a duplicate is the later claimant of a shared
     document regardless of processing order. Decisions are returned in input order; there is no sort.
     """
-    transactions = repo.transactions(customer_id)
-    semaphore = asyncio.Semaphore(_CONCURRENCY)
+    transactions = [t for t in repo.transactions(customer_id) if subset is None or t.id in subset]
+    semaphore = asyncio.Semaphore(concurrency)
 
     async def _bounded(txn: Transaction) -> tuple[Transaction, Evidence | None, Proposal | None]:
         async with semaphore:
-            for attempt in range(_RETRIES + 1):
+            for attempt in range(retries + 1):
                 try:
                     evidence, proposal = await decide(txn, repo, agent)
                     return txn, evidence, proposal
                 except Exception:
-                    if attempt == _RETRIES:
+                    if attempt == retries:
                         return txn, None, None
             return txn, None, None
 

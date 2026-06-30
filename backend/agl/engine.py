@@ -215,8 +215,9 @@ def _categorisation_verified(
     Any one suffices: the vendor recurs as an established counterparty, a prior correction pins this
     vendor's cost account, an earlier transaction for the same vendor was booked there, a settling bill
     is already booked there, or a settled document's realised VAT rate matches the account's treatment.
-    Absent all of these, an auto-post is deferred to review — a wrong categorisation otherwise surfaces
-    only at period-end.
+    Absent all of these, the line is tagged unverified and surfaced as a per-line confidence signal;
+    it does not gate auto-post (the material-uncorroborated rule is the corroboration gate). It shows
+    the accountant whether a fact independently backs the account.
     """
     if _recurring_vendor(txn, repo):
         return True

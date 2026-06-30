@@ -175,7 +175,7 @@ flowchart TD
 
     REPO --> GROUND
     MEM --> GROUND
-    ROUTE -->|both conf high, guard clean, corroborated| AUTO
+    ROUTE -->|both conf high, guard clean| AUTO
     ROUTE -->|low conf or guard downgrade| REV
     ROUTE -->|duplicate| ANOM
     ROUTE -->|material doc missing| REQ
@@ -265,20 +265,24 @@ A transaction is **two decisions with different ways to be wrong**, so the agent
 "This is office rent" can be certain while "this clears invoice INV-2026-004" is not, and vice versa. A
 single confidence number would be either unsafe or lossy.
 
-**Auto-post requires both confidences HIGH *and* a clean guard *and* corroboration.** The agent's HIGH
-is not taken on faith for entries that can hurt the books: a **material** (≥ EUR 1,000), VAT-sensitive
-entry whose matched document's counterparty does **not** appear in the bank line (and is not named in
-the remittance) is downgraded to review even at self-high confidence (`engine._material_uncorroborated`).
-Newness alone is never a reason to defer — categorising a novel transaction is the agent's job — only
-low confidence, a contradicting guard, or high stakes without corroboration is.
+**Auto-post requires both confidences HIGH *and* a clean guard.** On top of that, two corroboration
+mechanisms run, and only one of them gates. A **five-fact check** (a recurring vendor, a prior
+correction, vendor history, the settling bill, or a matching VAT rate) is **computed and shown as a
+per-line confidence signal; it does not gate auto-post.** It tells the accountant whether a fact
+independently backs the account. The **material-entry gate** does gate: a **material** (≥ EUR 1,000),
+VAT-sensitive entry whose matched document's counterparty does **not** appear in the bank line (and is
+not named in the remittance) is downgraded to review even at self-high confidence
+(`engine._material_uncorroborated`). Newness alone is never a reason to defer (categorising a novel
+transaction is the agent's job); only low confidence, a contradicting guard, or a material entry
+without corroboration is.
 
 ```mermaid
 flowchart TD
     L[Bank line] --> G[GROUND: code computes the facts]
     G --> D["DECIDE: one LLM call, temp 0<br/>account + match + anomaly<br/>+ account-confidence + match-confidence"]
-    D --> Q{"account-conf HIGH<br/>AND match-conf HIGH<br/>AND guard clean<br/>AND corroborated?"}
+    D --> Q{"account-conf HIGH<br/>AND match-conf HIGH<br/>AND guard clean?"}
     Q -->|yes| AUTO[AUTO-POST]
-    Q -->|"no, or guard downgrade"| REV[REVIEW queue]
+    Q -->|"no, or guard / material-VAT downgrade"| REV[REVIEW queue]
     D -->|"anomaly: duplicate"| AN[ANOMALY]
     D -->|"material doc missing"| RQ[REQUEST-DOCUMENT]
     GRD[["GUARD is downgrade-only:<br/>it can push toward review / anomaly / request,<br/>never upgrade to auto-post"]] -.-> REV
@@ -476,7 +480,7 @@ The dataset models **Studio Vondel B.V.**, an **8-FTE Amsterdam web & branding s
 | Invoices issued | **10** | some paid, some still open (accounts receivable) |
 | Bills received | **20** | 18 paid in Q1, 2 still open (accounts payable) |
 | Chart of accounts | ~35 | a realistic Dutch SME chart |
-| Provided matches | 26 positive | transaction↔document, **~96%** accurate (Neno infra) |
+| Provided matches | 26 positive | transaction↔document (Neno infra); **~96%** across all 100 lines, **~85%** (22/26) on the rows that claim a match |
 | Prior corrections | **5** | accountant conventions known from before Q1 |
 
 ### Reading the Dutch — a glossary
